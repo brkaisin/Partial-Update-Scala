@@ -26,7 +26,7 @@ def circeDependencies =
   )
 
 val magnoliaDependencies = Seq(
-  "com.propensive" %% "magnolia" % "0.17.0",
+  "com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.6",
   "org.scala-lang" % "scala-reflect" % "2.13.12" % Provided
 )
 

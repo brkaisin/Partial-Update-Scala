@@ -1,7 +1,7 @@
 package be.brkaisin.partialupdate.core
 
 import be.brkaisin.partialupdate.util.Identifiable
-import magnolia._
+import magnolia1._
 
 import scala.language.experimental.macros
 
@@ -58,12 +58,12 @@ object PartialUpdator {
         partial.toCompleteUpdated(currentComplete.asInstanceOf[List[T]]).asInstanceOf[C]
     }
 
-  // Implementation of combine is not pure but modifies the current instance by reflection instead of creating a new
+  // Implementation of join is not pure but modifies the current instance by reflection instead of creating a new
   // one. This is the only way found because magnolia does not support type-class derivation with more than one type
   // parameter. Here, we do not construct an instance of [[P]] but we rather use the instance of [[P]] to update the
   // current instance of [[C]], for which we do not have a "rawConstruct" method. For purity in your code, the argument
   // "currentComplete" of method [[PartialUpdator.updated]] must be a copy of the current instance.
-  def combine[P](caseClass: CaseClass[Typeclass, P]): Typeclass[P] =
+  def join[P](caseClass: CaseClass[Typeclass, P]): Typeclass[P] =
     new PartialUpdator[P] {
       def updated[C](partial: P, currentComplete: C): C =
         caseClass.parameters.foldLeft(currentComplete) { (currentCompleteAcc, param) =>
