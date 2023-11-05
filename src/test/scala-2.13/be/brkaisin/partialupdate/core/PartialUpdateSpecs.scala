@@ -143,10 +143,10 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )
     val partialBabarWithSomeFromNone = PartialBabar(maybeFoo = PartialOptionalField.Set(brandNewFoo))
 
-//    assertEquals(
-//      partialBabarWithSomeFromNone.applyPartialUpdate(completeBabarWithoutFoo),
-//      completeBabarWithoutFoo.copy(maybeFoo = Some(brandNewFoo))
-//    )
+    assertEquals(
+      partialBabarWithSomeFromNone.applyPartialUpdate(completeBabarWithoutFoo),
+      completeBabarWithoutFoo.copy(maybeFoo = Some(brandNewFoo))
+    )
 
     // 3. Updating an optional nested field that is currently None fails
     val partialBabarWithSomeUpdatedFromNone = PartialBabar(
