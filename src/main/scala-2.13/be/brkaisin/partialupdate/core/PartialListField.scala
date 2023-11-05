@@ -3,7 +3,8 @@ package be.brkaisin.partialupdate.core
 import be.brkaisin.partialupdate.util.Identifiable
 
 /**
-  * A [[PartialListField]] is a [[Partial]] that can be applied to a list of values of type T.
+  * A [[PartialListField]] is a [[Partial]] that can be applied to a list of values of type T (which are
+  * [[Identifiable]]). It can be used to update a list of values, reorder it, or to not update it.
   * See the comments throughout the code for more details.
   * @tparam Id the type of the id of the elements of the list
   * @tparam T the type of the elements of the list
@@ -43,8 +44,8 @@ object PartialListField {
       alterations: List[ListElemAlteration[Id, T, PartialFieldType]]
   ) extends PartialListField[Id, T, PartialFieldType] {
     @throws[IllegalArgumentException]("if an element is not in the list when updating or deleting it")
-    def toCompleteUpdated(currentValue: List[T]): List[T] = {
-      val updatedCompleteValues = alterations.foldLeft(currentValue) {
+    def toCompleteUpdated(currentValue: List[T]): List[T] =
+      alterations.foldLeft(currentValue) {
         case (currentCompleteValuesAcc, alteration) =>
           alteration match {
             case ListElemAlteration.ElemAdded(id, elem) =>
@@ -70,8 +71,6 @@ object PartialListField {
               currentCompleteValuesAcc.filter(_.id != id)
           }
       }
-      updatedCompleteValues
-    }
   }
 
   /* The list is reordered */
