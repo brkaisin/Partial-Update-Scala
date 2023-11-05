@@ -16,7 +16,7 @@ import io.circe.syntax.EncoderOps
   */
 object CirceCodecs {
   /* Partial field */
-  implicit def partialFieldDecoder[T](implicit tDecoder: Decoder[T]): Decoder[PartialField[T]] =
+  implicit def partialFieldDecoder[T: Decoder]: Decoder[PartialField[T]] =
     new Decoder[PartialField[T]] {
       def apply(c: HCursor): Result[PartialField[T]] = tryDecode(c)
 
@@ -24,13 +24,13 @@ object CirceCodecs {
         c match {
           case c: HCursor =>
             if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
-            else tDecoder(c).map(PartialField.Updated(_))
+            else c.as[T].map(PartialField.Updated(_))
           case _: FailedCursor => Right(PartialField.Unchanged())
         }
     }
 
-  implicit def partialFieldEncoder[T](implicit tEncoder: Encoder[T]): Encoder[PartialField[T]] = {
-    case PartialField.Updated(value) => tEncoder(value)
+  implicit def partialFieldEncoder[T: Encoder]: Encoder[PartialField[T]] = {
+    case PartialField.Updated(value) => value.asJson
     case PartialField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
@@ -50,18 +50,15 @@ object CirceCodecs {
         }
     }
 
-  implicit def partialNestedFieldEncoder[T, PartialFieldType <: Partial[T]](implicit
-      partialEncoder: Encoder[PartialFieldType]
-  ): Encoder[PartialNestedField[T, PartialFieldType]] = {
-    case PartialNestedField.Updated(value) => partialEncoder(value)
+  implicit def partialNestedFieldEncoder[T, PartialFieldType <: Partial[T]: Encoder]
+      : Encoder[PartialNestedField[T, PartialFieldType]] = {
+    case PartialNestedField.Updated(value) => value.asJson
     case PartialNestedField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
-  /* Partial optional nested field */
-  implicit def partialOptionalFieldDecoder[T, PartialFieldType <: Partial[T]](implicit
-      tDecoder: Decoder[T],
-      partialDecoder: Decoder[PartialFieldType]
-  ): Decoder[PartialOptionalField[T, PartialFieldType]] =
+  /* Partial optional field */
+  implicit def partialOptionalFieldDecoder[T: Decoder, PartialFieldType <: Partial[T]: Decoder]
+      : Decoder[PartialOptionalField[T, PartialFieldType]] =
     new Decoder[PartialOptionalField[T, PartialFieldType]] {
       def apply(c: HCursor): Result[PartialOptionalField[T, PartialFieldType]] = tryDecode(c)
 
@@ -73,18 +70,16 @@ object CirceCodecs {
               c.downField("initialValue").as[T] match {
                 case Right(initialValue) =>
                   Right(PartialOptionalField.Set(initialValue))
-                case _ => partialDecoder(c).map(PartialOptionalField.Updated(_))
+                case _ => c.as[PartialFieldType].map(PartialOptionalField.Updated(_))
               }
           case _: FailedCursor => Right(PartialOptionalField.Unchanged[T, PartialFieldType]())
         }
     }
 
-  implicit def partialOptionalFieldEncoder[T, PartialFieldType <: Partial[T]](implicit
-      tEncoder: Encoder[T],
-      partialEncoder: Encoder[PartialFieldType]
-  ): Encoder[PartialOptionalField[T, PartialFieldType]] = {
-    case PartialOptionalField.Set(value)     => Json.obj("initialValue" -> tEncoder(value))
-    case PartialOptionalField.Updated(value) => partialEncoder(value)
+  implicit def partialOptionalFieldEncoder[T: Encoder, PartialFieldType <: Partial[T]: Encoder]
+      : Encoder[PartialOptionalField[T, PartialFieldType]] = {
+    case PartialOptionalField.Set(value)     => Json.obj("initialValue" -> value.asJson)
+    case PartialOptionalField.Updated(value) => value.asJson
     case PartialOptionalField.Deleted()      => Json.Null
     case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
@@ -133,7 +128,7 @@ object CirceCodecs {
           Left(DecodingFailure(MissingField, c.history))
       }
 
-  /* Partial list of identifiables field */
+  /* Partial list field */
   implicit def partialListFieldDecoder[Id: Decoder, T <: Identifiable[T, Id]: Decoder, PartialFieldType <: Partial[
     T
   ]: Decoder]: Decoder[PartialListField[Id, T, PartialFieldType]] =
