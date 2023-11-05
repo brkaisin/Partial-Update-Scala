@@ -17,27 +17,22 @@ object PartialUpdator {
   implicit def partialFieldUpdator[T]: PartialUpdator[PartialField[T]] =
     new PartialUpdator[PartialField[T]] {
       def updated[C](partial: PartialField[T], currentComplete: C): C =
+        // C is of type T, we can cast it
         partial.toCompleteUpdated(currentComplete.asInstanceOf[T]).asInstanceOf[C]
-    }
-
-  implicit def partialOptionalFieldUpdator[T]: PartialUpdator[PartialOptionalField[T]] =
-    new PartialUpdator[PartialOptionalField[T]] {
-      def updated[C](partial: PartialOptionalField[T], currentComplete: C): C =
-        // C is of type Option[T], making the following casts safe
-        partial.toCompleteUpdated(currentComplete.asInstanceOf[Option[T]]).asInstanceOf[C]
     }
 
   implicit def partialNestedFieldUpdator[T, PartialFieldType <: Partial[T]]
       : PartialUpdator[PartialNestedField[T, PartialFieldType]] =
     new PartialUpdator[PartialNestedField[T, PartialFieldType]] {
       def updated[C](partial: PartialNestedField[T, PartialFieldType], currentComplete: C): C =
+        // C is of type T, we can cast it
         partial.toCompleteUpdated(currentComplete.asInstanceOf[T]).asInstanceOf[C]
     }
 
-  implicit def partialOptionalNestedFieldUpdator[T, PartialFieldType <: Partial[T]]
-      : PartialUpdator[PartialOptionalNestedField[T, PartialFieldType]] =
-    new PartialUpdator[PartialOptionalNestedField[T, PartialFieldType]] {
-      def updated[C](partial: PartialOptionalNestedField[T, PartialFieldType], currentComplete: C): C =
+  implicit def partialOptionalFieldUpdator[T, PartialFieldType <: Partial[T]]
+      : PartialUpdator[PartialOptionalField[T, PartialFieldType]] =
+    new PartialUpdator[PartialOptionalField[T, PartialFieldType]] {
+      def updated[C](partial: PartialOptionalField[T, PartialFieldType], currentComplete: C): C =
         // C is of type Option[T], we can cast it
         partial.toCompleteUpdated(currentComplete.asInstanceOf[Option[T]]).asInstanceOf[C]
     }

@@ -117,7 +117,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     // 1. Update the optional nested field with Some partial from a defined value
 
     val partialWithSome = PartialBabar(
-      maybeFoo = PartialOptionalNestedField.Updated(
+      maybeFoo = PartialOptionalField.Updated(
         PartialFoo(
           string = PartialField.Updated("stringModified"),
           int = PartialField.Updated(12),
@@ -141,7 +141,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeString = Some("maybeStringSet"),
       maybeInt = None
     )
-    val partialBabarWithSomeFromNone = PartialBabar(maybeFoo = PartialOptionalNestedField.Set(brandNewFoo))
+    val partialBabarWithSomeFromNone = PartialBabar(maybeFoo = PartialOptionalField.Set(brandNewFoo))
 
 //    assertEquals(
 //      partialBabarWithSomeFromNone.toCompleteUpdated(completeBabarWithoutFoo),
@@ -150,11 +150,11 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     // 3. Updating an optional nested field that is currently None fails
     val partialBabarWithSomeUpdatedFromNone = PartialBabar(
-      maybeFoo = PartialOptionalNestedField.Updated(
+      maybeFoo = PartialOptionalField.Updated(
         PartialFoo(
           string = PartialField.Updated("stringModified"),
           int = PartialField.Updated(12),
-          maybeString = PartialOptionalField.Updated("maybeStringModified"),
+          maybeString = PartialOptionalField.Updated(PartialField.Updated("maybeStringModified")),
           maybeInt = PartialOptionalField.Deleted()
         )
       )
@@ -166,7 +166,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     // 4. Update the optional nested field with None partial from a defined value
     val partialWithNone = PartialBabar(
-      maybeFoo = PartialOptionalNestedField.Deleted()
+      maybeFoo = PartialOptionalField.Deleted()
     )
 
     assertEquals(
@@ -178,7 +178,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     // 5. Update the optional nested field with None partial from a None value
     val partialBabarWithNoneFromNone = PartialBabar(
-      maybeFoo = PartialOptionalNestedField.Deleted()
+      maybeFoo = PartialOptionalField.Deleted()
     )
 
     interceptMessage[IllegalArgumentException](

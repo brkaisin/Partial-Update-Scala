@@ -1,11 +1,11 @@
 package be.brkaisin.partialupdate.models
 
-import be.brkaisin.partialupdate.core.{Partial, PartialOptionalNestedField, PartialUpdator}
+import be.brkaisin.partialupdate.core.{Partial, PartialOptionalField, PartialUpdator}
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 
 final case class PartialBabar(
-    maybeFoo: PartialOptionalNestedField[Foo, PartialFoo]
+    maybeFoo: PartialOptionalField[Foo, PartialFoo]
 ) extends Partial[Babar] {
 
   def toCompleteUpdated(currentValue: Babar): Babar =

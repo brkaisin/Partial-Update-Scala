@@ -1,14 +1,14 @@
 package be.brkaisin.partialupdate.models
 
-import be.brkaisin.partialupdate.core.{Partial, PartialField, PartialOptionalField, PartialUpdator}
+import be.brkaisin.partialupdate.core.{Partial, PartialField, PartialUpdator, SimplePartialOptionalField}
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 
 final case class PartialFoo(
     string: PartialField[String],
     int: PartialField[Int],
-    maybeString: PartialOptionalField[String],
-    maybeInt: PartialOptionalField[Int]
+    maybeString: SimplePartialOptionalField[String],
+    maybeInt: SimplePartialOptionalField[Int]
 ) extends Partial[Foo] {
   def toCompleteUpdated(currentValue: Foo): Foo = PartialUpdator[PartialFoo].updated[Foo](this, currentValue.copy())
 }

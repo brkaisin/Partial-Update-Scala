@@ -53,56 +53,36 @@ object CirceCodecs {
     case PartialNestedField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
-  /* Partial optional field */
-  implicit def partialOptionalFieldDecoder[T](implicit tDecoder: Decoder[T]): Decoder[PartialOptionalField[T]] =
-    new Decoder[PartialOptionalField[T]] {
-      def apply(c: HCursor): Result[PartialOptionalField[T]] = tryDecode(c)
-
-      final override def tryDecode(c: ACursor): Decoder.Result[PartialOptionalField[T]] =
-        c match {
-          case c: HCursor =>
-            if (c.value.isNull) Right(PartialOptionalField.Deleted())
-            else tDecoder(c).map(PartialOptionalField.Updated(_))
-          case _: FailedCursor => Right(PartialOptionalField.Unchanged())
-        }
-    }
-
-  implicit def partialOptionalFieldEncoder[T](implicit tEncoder: Encoder[T]): Encoder[PartialOptionalField[T]] = {
-    case PartialOptionalField.Updated(value) => tEncoder(value)
-    case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
-    case PartialOptionalField.Deleted()      => Json.Null
-  }
-
   /* Partial optional nested field */
-  implicit def partialOptionalNestedFieldDecoder[T, PartialFieldType <: Partial[T]](implicit
+  implicit def partialOptionalFieldDecoder[T, PartialFieldType <: Partial[T]](implicit
       tDecoder: Decoder[T],
       partialDecoder: Decoder[PartialFieldType]
-  ): Decoder[PartialOptionalNestedField[T, PartialFieldType]] =
-    new Decoder[PartialOptionalNestedField[T, PartialFieldType]] {
-      def apply(c: HCursor): Result[PartialOptionalNestedField[T, PartialFieldType]] = tryDecode(c)
+  ): Decoder[PartialOptionalField[T, PartialFieldType]] =
+    new Decoder[PartialOptionalField[T, PartialFieldType]] {
+      def apply(c: HCursor): Result[PartialOptionalField[T, PartialFieldType]] = tryDecode(c)
 
-      final override def tryDecode(c: ACursor): Decoder.Result[PartialOptionalNestedField[T, PartialFieldType]] =
+      final override def tryDecode(c: ACursor): Decoder.Result[PartialOptionalField[T, PartialFieldType]] =
         c match {
           case c: HCursor =>
-            if (c.value.isNull) Right(PartialOptionalNestedField.Deleted[T, PartialFieldType]())
+            if (c.value.isNull) Right(PartialOptionalField.Deleted[T, PartialFieldType]())
             else
               c.downField("initialValue").as[T] match {
                 case Right(initialValue) =>
-                  Right(PartialOptionalNestedField.Set(initialValue))
-                case _ => partialDecoder(c).map(PartialOptionalNestedField.Updated(_))
+                  Right(PartialOptionalField.Set(initialValue))
+                case _ => partialDecoder(c).map(PartialOptionalField.Updated(_))
               }
-          case _: FailedCursor => Right(PartialOptionalNestedField.Unchanged[T, PartialFieldType]())
+          case _: FailedCursor => Right(PartialOptionalField.Unchanged[T, PartialFieldType]())
         }
     }
 
-  implicit def partialOptionalNestedFieldEncoder[T, PartialFieldType <: Partial[T]](implicit
+  implicit def partialOptionalFieldEncoder[T, PartialFieldType <: Partial[T]](implicit
       tEncoder: Encoder[T],
       partialEncoder: Encoder[PartialFieldType]
-  ): Encoder[PartialOptionalNestedField[T, PartialFieldType]] = {
-    case PartialOptionalNestedField.Set(value)     => Json.obj("initialValue" -> tEncoder(value))
-    case PartialOptionalNestedField.Updated(value) => partialEncoder(value)
-    case PartialOptionalNestedField.Deleted()      => Json.Null
-    case PartialOptionalNestedField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
+  ): Encoder[PartialOptionalField[T, PartialFieldType]] = {
+    case PartialOptionalField.Set(value)     => Json.obj("initialValue" -> tEncoder(value))
+    case PartialOptionalField.Updated(value) => partialEncoder(value)
+    case PartialOptionalField.Deleted()      => Json.Null
+    case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
   /* List elem alterations */
