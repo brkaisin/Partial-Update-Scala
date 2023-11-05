@@ -8,7 +8,7 @@ final case class PartialBabar(
     maybeFoo: PartialOptionalField[Foo, PartialFoo]
 ) extends Partial[Babar] {
 
-  def toCompleteUpdated(currentValue: Babar): Babar =
+  def applyPartialUpdate(currentValue: Babar): Babar =
     PartialUpdator[PartialBabar].updated[Babar](this, currentValue.copy())
 }
 

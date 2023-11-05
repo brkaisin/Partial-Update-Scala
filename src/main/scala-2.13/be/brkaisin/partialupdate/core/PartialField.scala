@@ -11,12 +11,12 @@ object PartialField {
 
   /* The value is updated */
   final case class Updated[T](value: T) extends PartialField[T] {
-    def toCompleteUpdated(currentValue: T): T = value
+    def applyPartialUpdate(currentValue: T): T = value
   }
 
   /* The value is not updated */
   final case class Unchanged[T]() extends PartialField[T] {
-    def toCompleteUpdated(currentValue: T): T = currentValue
+    def applyPartialUpdate(currentValue: T): T = currentValue
   }
 
 }

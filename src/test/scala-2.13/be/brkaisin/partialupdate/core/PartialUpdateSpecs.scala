@@ -19,7 +19,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeInt = PartialOptionalField.Unchanged()
     )
 
-    assertEquals(partial.toCompleteUpdated(complete), complete)
+    assertEquals(partial.applyPartialUpdate(complete), complete)
   }
 
   test("Partial update of one field must only update this field") {
@@ -30,7 +30,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeInt = PartialOptionalField.Unchanged()
     )
 
-    assertEquals(partial.toCompleteUpdated(complete), complete.copy(string = "stringModified"))
+    assertEquals(partial.applyPartialUpdate(complete), complete.copy(string = "stringModified"))
   }
 
   test("Partial update of two fields must only update these fields") {
@@ -41,7 +41,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeInt = PartialOptionalField.Unchanged()
     )
 
-    assertEquals(partial.toCompleteUpdated(complete), complete.copy(string = "stringModified", int = 12))
+    assertEquals(partial.applyPartialUpdate(complete), complete.copy(string = "stringModified", int = 12))
   }
 
   test("Partial deletion of one optional field must only delete this field") {
@@ -52,7 +52,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeInt = PartialOptionalField.Unchanged()
     )
 
-    assertEquals(partial.toCompleteUpdated(complete), complete.copy(maybeString = None))
+    assertEquals(partial.applyPartialUpdate(complete), complete.copy(maybeString = None))
   }
 
   test("Partial deletion of two optional fields must only delete these fields") {
@@ -63,7 +63,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
       maybeInt = PartialOptionalField.Deleted()
     )
 
-    assertEquals(partial.toCompleteUpdated(complete), complete.copy(maybeString = None, maybeInt = None))
+    assertEquals(partial.applyPartialUpdate(complete), complete.copy(maybeString = None, maybeInt = None))
   }
 
   test("Update of a partial nested field works") {
@@ -90,7 +90,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.toCompleteUpdated(complete),
+      partial.applyPartialUpdate(complete),
       complete.copy(
         foo = complete.foo.copy(string = "stringModified", int = 12, maybeInt = None),
         maybeBoolean = None
@@ -128,7 +128,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partialWithSome.toCompleteUpdated(completeBabarWithFoo),
+      partialWithSome.applyPartialUpdate(completeBabarWithFoo),
       completeBabarWithFoo.copy(
         maybeFoo = Some(completeBabarWithFoo.maybeFoo.get.copy(string = "stringModified", int = 12, maybeInt = None))
       )
@@ -144,7 +144,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partialBabarWithSomeFromNone = PartialBabar(maybeFoo = PartialOptionalField.Set(brandNewFoo))
 
 //    assertEquals(
-//      partialBabarWithSomeFromNone.toCompleteUpdated(completeBabarWithoutFoo),
+//      partialBabarWithSomeFromNone.applyPartialUpdate(completeBabarWithoutFoo),
 //      completeBabarWithoutFoo.copy(maybeFoo = Some(brandNewFoo))
 //    )
 
@@ -162,7 +162,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     interceptMessage[IllegalArgumentException](
       "Cannot update a value that is not set."
-    )(partialBabarWithSomeUpdatedFromNone.toCompleteUpdated(completeBabarWithoutFoo))
+    )(partialBabarWithSomeUpdatedFromNone.applyPartialUpdate(completeBabarWithoutFoo))
 
     // 4. Update the optional nested field with None partial from a defined value
     val partialWithNone = PartialBabar(
@@ -170,7 +170,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partialWithNone.toCompleteUpdated(completeBabarWithFoo),
+      partialWithNone.applyPartialUpdate(completeBabarWithFoo),
       completeBabarWithFoo.copy(
         maybeFoo = None
       )
@@ -183,7 +183,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     interceptMessage[IllegalArgumentException](
       "Cannot delete a value that is not set."
-    )(partialBabarWithNoneFromNone.toCompleteUpdated(completeBabarWithoutFoo))
+    )(partialBabarWithNoneFromNone.applyPartialUpdate(completeBabarWithoutFoo))
   }
 
   test("Update of a partial list field works") {
@@ -231,7 +231,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.toCompleteUpdated(complete),
+      partial.applyPartialUpdate(complete),
       complete.copy(
         foos = List(
           IdentifiableFoo(
@@ -256,7 +256,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partial = decode[PartialFoo](json).toTry.get
 
     assertEquals(
-      partial.toCompleteUpdated(complete),
+      partial.applyPartialUpdate(complete),
       complete.copy(string = "stringModified", int = 1, maybeInt = None)
     )
   }
@@ -268,7 +268,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partial = decode[PartialBar](json).toTry.get
 
     assertEquals(
-      partial.toCompleteUpdated(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
+      partial.applyPartialUpdate(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
       Bar(Foo("stringModified", 1, Some("maybeString"), None), None)
     )
 
@@ -278,7 +278,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partial2 = decode[PartialBar](json2).toTry.get
 
     assertEquals(
-      partial2.toCompleteUpdated(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
+      partial2.applyPartialUpdate(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
       Bar(Foo("string", 1, Some("maybeString"), Some(2)), None)
     )
   }
@@ -290,7 +290,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partial = decode[PartialBabar](json).toTry.get
 
     assertEquals(
-      partial.toCompleteUpdated(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
+      partial.applyPartialUpdate(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
       Babar(Some(Foo("stringModified", 1, Some("maybeString"), None)))
     )
 
@@ -301,13 +301,13 @@ class PartialUpdateSpecs extends munit.FunSuite {
 
     // 2.1. Initial value is undefined
     assertEquals(
-      partial2.toCompleteUpdated(Babar(None)),
+      partial2.applyPartialUpdate(Babar(None)),
       Babar(None)
     )
 
     // 2.2. Initial value is defined
     assertEquals(
-      partial2.toCompleteUpdated(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
+      partial2.applyPartialUpdate(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
       Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))
     )
   }

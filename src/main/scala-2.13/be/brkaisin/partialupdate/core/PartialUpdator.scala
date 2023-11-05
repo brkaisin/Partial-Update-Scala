@@ -28,7 +28,7 @@ trait PartialUpdator[P] {
 object PartialUpdator {
   type Typeclass[P] = PartialUpdator[P]
   private def partialUpdate[C, P <: Partial[C]](partial: P, currentComplete: C): C =
-    partial.toCompleteUpdated(currentComplete)
+    partial.applyPartialUpdate(currentComplete)
 
   implicit def partialFieldUpdator[T]: PartialUpdator[PartialField[T]] =
     new PartialUpdator[PartialField[T]] {

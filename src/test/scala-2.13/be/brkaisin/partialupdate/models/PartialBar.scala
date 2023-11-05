@@ -7,7 +7,7 @@ import io.circe.generic.semiauto.deriveCodec
 final case class PartialBar(foo: PartialNestedField[Foo, PartialFoo], maybeBoolean: SimplePartialOptionalField[Boolean])
     extends Partial[Bar] {
 
-  def toCompleteUpdated(currentValue: Bar): Bar = PartialUpdator[PartialBar].updated[Bar](this, currentValue.copy())
+  def applyPartialUpdate(currentValue: Bar): Bar = PartialUpdator[PartialBar].updated[Bar](this, currentValue.copy())
 }
 
 object PartialBar {

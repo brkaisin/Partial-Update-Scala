@@ -10,7 +10,7 @@ final case class PartialFoo(
     maybeString: SimplePartialOptionalField[String],
     maybeInt: SimplePartialOptionalField[Int]
 ) extends Partial[Foo] {
-  def toCompleteUpdated(currentValue: Foo): Foo = PartialUpdator[PartialFoo].updated[Foo](this, currentValue.copy())
+  def applyPartialUpdate(currentValue: Foo): Foo = PartialUpdator[PartialFoo].updated[Foo](this, currentValue.copy())
 }
 
 object PartialFoo {

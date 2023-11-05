@@ -8,7 +8,7 @@ final case class PartialBaz(
     foos: PartialListField[java.util.UUID, IdentifiableFoo, PartialIdentifiableFoo]
 ) extends Partial[Baz] {
 
-  def toCompleteUpdated(currentValue: Baz): Baz = PartialUpdator[PartialBaz].updated[Baz](this, currentValue.copy())
+  def applyPartialUpdate(currentValue: Baz): Baz = PartialUpdator[PartialBaz].updated[Baz](this, currentValue.copy())
 }
 
 object PartialBaz {

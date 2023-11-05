@@ -19,7 +19,7 @@ object PartialListField {
       operations: List[ListOperation[Id, T, PartialFieldType]]
   ) extends PartialListField[Id, T, PartialFieldType] {
     @throws[IllegalArgumentException]("if an element is not in the list when updating or deleting it")
-    def toCompleteUpdated(currentValue: List[T]): List[T] =
+    def applyPartialUpdate(currentValue: List[T]): List[T] =
       operations.foldLeft(currentValue) {
         case (currentCompleteValuesAcc, operation) =>
           operation match {
@@ -39,7 +39,7 @@ object PartialListField {
               // update the element
               currentCompleteValuesAcc.updated(
                 index,
-                partialValue.toCompleteUpdated(currentCompleteValuesAcc(index))
+                partialValue.applyPartialUpdate(currentCompleteValuesAcc(index))
               )
             case ListOperation.ElemDeleted(id) =>
               val index = currentCompleteValuesAcc.indexWhere(_.id == id)
@@ -57,7 +57,7 @@ object PartialListField {
   final case class ElemsReordered[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](newOrder: List[Id])
       extends PartialListField[Id, T, PartialFieldType] {
     @throws[IllegalArgumentException]("if an element is not in the list when reordering it")
-    def toCompleteUpdated(currentValue: List[T]): List[T] =
+    def applyPartialUpdate(currentValue: List[T]): List[T] =
       // reorder the list, but fail if an Id is not found in the current list
       newOrder.map { id =>
         currentValue
@@ -73,7 +73,7 @@ object PartialListField {
   /* The list is not updated */
   final case class Unchanged[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]()
       extends PartialListField[Id, T, PartialFieldType] {
-    def toCompleteUpdated(currentValue: List[T]): List[T] = currentValue
+    def applyPartialUpdate(currentValue: List[T]): List[T] = currentValue
   }
 
 }

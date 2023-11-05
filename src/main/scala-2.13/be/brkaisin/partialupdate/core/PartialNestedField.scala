@@ -13,11 +13,11 @@ object PartialNestedField {
   /* The value is updated */
   final case class Updated[T, PartialFieldType <: Partial[T]](value: PartialFieldType)
       extends PartialNestedField[T, PartialFieldType] {
-    def toCompleteUpdated(currentValue: T): T = value.toCompleteUpdated(currentValue)
+    def applyPartialUpdate(currentValue: T): T = value.applyPartialUpdate(currentValue)
   }
 
   /* The value is not updated */
   final case class Unchanged[T, PartialFieldType <: Partial[T]]() extends PartialNestedField[T, PartialFieldType] {
-    def toCompleteUpdated(currentValue: T): T = currentValue
+    def applyPartialUpdate(currentValue: T): T = currentValue
   }
 }

@@ -14,7 +14,7 @@ object PartialOptionalField {
   /* The value is set */
   final case class Set[T, PartialFieldType <: Partial[T]](value: T) extends PartialOptionalField[T, PartialFieldType] {
     @throws[IllegalArgumentException]("if the value is already set")
-    def toCompleteUpdated(currentValue: Option[T]): Option[T] =
+    def applyPartialUpdate(currentValue: Option[T]): Option[T] =
       currentValue match {
         case Some(_) => throw new IllegalArgumentException("Cannot set a value that is already set.")
         case None    => Some(value)
@@ -25,8 +25,8 @@ object PartialOptionalField {
   final case class Updated[T, PartialFieldType <: Partial[T]](value: PartialFieldType)
       extends PartialOptionalField[T, PartialFieldType] {
     @throws[IllegalArgumentException]("if the value is not set")
-    def toCompleteUpdated(currentValue: Option[T]): Option[T] = {
-      val updatedComplete = value.toCompleteUpdated {
+    def applyPartialUpdate(currentValue: Option[T]): Option[T] = {
+      val updatedComplete = value.applyPartialUpdate {
         currentValue match {
           case Some(innerValue) => innerValue
           case None =>
@@ -40,7 +40,7 @@ object PartialOptionalField {
   /* The value is deleted */
   final case class Deleted[T, PartialFieldType <: Partial[T]]() extends PartialOptionalField[T, PartialFieldType] {
     @throws[IllegalArgumentException]("if the value is not set")
-    def toCompleteUpdated(currentValue: Option[T]): Option[T] =
+    def applyPartialUpdate(currentValue: Option[T]): Option[T] =
       currentValue match {
         case Some(_) => None
         case None    => throw new IllegalArgumentException("Cannot delete a value that is not set.")
@@ -49,6 +49,6 @@ object PartialOptionalField {
 
   /* The value is not updated */
   final case class Unchanged[T, PartialFieldType <: Partial[T]]() extends PartialOptionalField[T, PartialFieldType] {
-    def toCompleteUpdated(currentValue: Option[T]): Option[T] = currentValue
+    def applyPartialUpdate(currentValue: Option[T]): Option[T] = currentValue
   }
 }

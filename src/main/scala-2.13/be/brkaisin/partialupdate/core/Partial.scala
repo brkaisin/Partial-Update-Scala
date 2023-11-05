@@ -6,5 +6,5 @@ package be.brkaisin.partialupdate.core
   * @tparam T the type of the value to update
   */
 trait Partial[T] {
-  def toCompleteUpdated(currentValue: T): T
+  def applyPartialUpdate(currentValue: T): T
 }

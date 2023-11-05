@@ -9,7 +9,7 @@ final case class PartialIdentifiableFoo(
     string: PartialField[String],
     int: PartialField[Int]
 ) extends Partial[IdentifiableFoo] {
-  def toCompleteUpdated(currentValue: IdentifiableFoo): IdentifiableFoo =
+  def applyPartialUpdate(currentValue: IdentifiableFoo): IdentifiableFoo =
     PartialUpdator[PartialIdentifiableFoo].updated[IdentifiableFoo](this, currentValue.copy())
 }
 
