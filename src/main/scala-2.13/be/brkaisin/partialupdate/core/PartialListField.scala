@@ -56,19 +56,24 @@ object PartialListField {
               // add the new element
               currentCompleteValuesAcc :+ elem
             case ListOperation.ElemUpdated(id, partialValue) =>
-              // update the element
               val index = currentCompleteValuesAcc.indexWhere(_.id == id)
               if (index < 0)
                 throw new IllegalArgumentException(
                   s"Cannot update element with id $id because it was not found in the list"
                 )
+              // update the element
               currentCompleteValuesAcc.updated(
                 index,
                 partialValue.toCompleteUpdated(currentCompleteValuesAcc(index))
               )
             case ListOperation.ElemDeleted(id) =>
+              val index = currentCompleteValuesAcc.indexWhere(_.id == id)
+              if (index < 0)
+                throw new IllegalArgumentException(
+                  s"Cannot delete element with id $id because it was not found in the list"
+                )
               // delete the element
-              currentCompleteValuesAcc.filter(_.id != id)
+              currentCompleteValuesAcc.patch(index, Nil, 1)
           }
       }
   }
