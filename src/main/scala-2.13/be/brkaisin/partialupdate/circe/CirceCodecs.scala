@@ -10,6 +10,10 @@ import io.circe._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax.EncoderOps
 
+/**
+  * This file contains circe codecs for the partial update library. It is not included in the library itself
+  * because the choice of the json library is left to the user. This file provides opinionated codecs for circe.
+  */
 object CirceCodecs {
   /* Partial field */
   implicit def partialFieldDecoder[T](implicit tDecoder: Decoder[T]): Decoder[PartialField[T]] =

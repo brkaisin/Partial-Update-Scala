@@ -2,27 +2,43 @@ package be.brkaisin.partialupdate.core
 
 import be.brkaisin.partialupdate.util.Identifiable
 
-// todo: since the ID is in T, it could be modified... write a new PartialList that separates T and Id
+/**
+  * A [[PartialListField]] is a [[Partial]] that can be applied to a list of values of type T.
+  * See the comments throughout the code for more details.
+  * @tparam Id the type of the id of the elements of the list
+  * @tparam T the type of the elements of the list
+  * @tparam PartialFieldType the type of the [[Partial]] that can be applied to the elements of the list
+  */
 sealed trait PartialListField[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]] extends Partial[List[T]]
 
 object PartialListField {
 
+  /**
+    * A [[ListElemAlteration]] is an alteration that can be applied to an element of a list. An element can be added,
+    * updated or deleted.
+    * @tparam Id the type of the id of the elements of the list
+    * @tparam T the type of the elements of the list
+    * @tparam PartialFieldType the type of the [[Partial]] that can be applied to the elements of the list
+    */
   sealed trait ListElemAlteration[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]
 
   object ListElemAlteration {
-    // todo: here, id is redundant since it is in T
+    /* The element is added */
     final case class ElemAdded[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](id: Id, value: T)
         extends ListElemAlteration[Id, T, PartialFieldType]
 
+    /* The element is updated */
     final case class ElemUpdated[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
         id: Id,
         value: PartialFieldType
     ) extends ListElemAlteration[Id, T, PartialFieldType]
 
+    /* The element is deleted */
     final case class ElemDeleted[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](id: Id)
         extends ListElemAlteration[Id, T, PartialFieldType]
   }
 
+  /* The list is updated */
   final case class ElemsUpdated[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
       alterations: List[ListElemAlteration[Id, T, PartialFieldType]]
   ) extends PartialListField[Id, T, PartialFieldType] {
@@ -58,6 +74,7 @@ object PartialListField {
     }
   }
 
+  /* The list is reordered */
   final case class ElemsReordered[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](newOrder: List[Id])
       extends PartialListField[Id, T, PartialFieldType] {
     @throws[IllegalArgumentException]("if an element is not in the list when reordering it")
@@ -74,6 +91,7 @@ object PartialListField {
       }
   }
 
+  /* The list is not updated */
   final case class Unchanged[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]()
       extends PartialListField[Id, T, PartialFieldType] {
     def toCompleteUpdated(currentValue: List[T]): List[T] = currentValue
