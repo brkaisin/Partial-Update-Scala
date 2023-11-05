@@ -11,9 +11,9 @@ sealed trait PartialNestedField[T, PartialFieldType <: Partial[T]] extends Parti
 
 object PartialNestedField {
   /* The value is updated */
-  final case class Updated[T, PartialFieldType <: Partial[T]](partial: PartialFieldType)
+  final case class Updated[T, PartialFieldType <: Partial[T]](value: PartialFieldType)
       extends PartialNestedField[T, PartialFieldType] {
-    def toCompleteUpdated(currentValue: T): T = partial.toCompleteUpdated(currentValue)
+    def toCompleteUpdated(currentValue: T): T = value.toCompleteUpdated(currentValue)
   }
 
   /* The value is not updated */
