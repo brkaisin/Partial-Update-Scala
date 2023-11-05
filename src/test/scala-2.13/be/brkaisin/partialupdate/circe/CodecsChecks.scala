@@ -20,14 +20,14 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   def partialFieldGen[T](gen: Gen[T]): Gen[PartialField[T]] =
     Gen.oneOf(
       gen.map(PartialField.Updated(_)),
-      Gen.const(PartialField.Unchanged)
+      Gen.const(PartialField.Unchanged[T]())
     )
 
   def partialOptionalFieldGen[T](gen: Gen[T]): Gen[PartialOptionalField[T]] =
     Gen.oneOf(
       gen.map(PartialOptionalField.Updated(_)),
-      Gen.const(PartialOptionalField.Unchanged),
-      Gen.const(PartialOptionalField.Deleted)
+      Gen.const(PartialOptionalField.Unchanged[T]()),
+      Gen.const(PartialOptionalField.Deleted[T]())
     )
 
   def partialNestedFieldGen[T, PartialFieldType <: Partial[T]](
@@ -35,7 +35,7 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   ): Gen[PartialNestedField[T, PartialFieldType]] =
     Gen.oneOf(
       gen.map(PartialNestedField.Updated[T, PartialFieldType]),
-      Gen.const(PartialNestedField.unchanged[T, PartialFieldType])
+      Gen.const(PartialNestedField.Unchanged[T, PartialFieldType]())
     )
 
   def partialOptionalNestedFieldGen[T, PartialFieldType <: Partial[T]](
@@ -45,8 +45,8 @@ final class CodecsChecks extends Properties("Codecs Checks") {
     Gen.oneOf(
       tGen.map(PartialOptionalNestedField.Set[T, PartialFieldType]),
       partialGen.map(PartialOptionalNestedField.Updated[T, PartialFieldType]),
-      Gen.const(PartialOptionalNestedField.unchanged[T, PartialFieldType]),
-      Gen.const(PartialOptionalNestedField.deleted[T, PartialFieldType])
+      Gen.const(PartialOptionalNestedField.Unchanged[T, PartialFieldType]()),
+      Gen.const(PartialOptionalNestedField.Deleted[T, PartialFieldType]())
     )
 
   def listElemAlterationGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
@@ -72,7 +72,7 @@ final class CodecsChecks extends Properties("Codecs Checks") {
       Gen
         .nonEmptyListOf(listElemAlterationGen(idGen, tGen, partialGen))
         .map(PartialListField.ElemsUpdated(_)),
-      Gen.const(PartialListField.unchanged[Id, T, PartialFieldType])
+      Gen.const(PartialListField.Unchanged[Id, T, PartialFieldType]())
     )
 
   lazy val fooGen: Gen[Foo] = for {
@@ -88,7 +88,9 @@ final class CodecsChecks extends Properties("Codecs Checks") {
     maybeString <- partialOptionalFieldGen(stringGen)
     maybeInt    <- partialOptionalFieldGen(intGen)
     // if only unchanged values, retry. This is a case that should never happen. A more detailed explanation are on the way...
-    if !(string == PartialField.Unchanged && int == PartialField.Unchanged && maybeString == PartialOptionalField.Unchanged && maybeInt == PartialOptionalField.Unchanged)
+    if !(string == PartialField.Unchanged[String]() && int == PartialField
+      .Unchanged[Int]() && maybeString == PartialOptionalField.Unchanged() && maybeInt == PartialOptionalField
+      .Unchanged())
   } yield PartialFoo(string, int, maybeString, maybeInt)
 
   lazy val barGen: Gen[Bar] = for {

@@ -1,25 +1,46 @@
 package be.brkaisin.partialupdate.core
 
-sealed trait PartialOptionalNestedField[T, PartialFieldType <: Partial[T]]
+sealed trait PartialOptionalNestedField[T, PartialFieldType <: Partial[T]] extends Partial[Option[T]]
 
 object PartialOptionalNestedField {
 
   final case class Set[T, PartialFieldType <: Partial[T]](value: T)
-      extends PartialOptionalNestedField[T, PartialFieldType]
+      extends PartialOptionalNestedField[T, PartialFieldType] {
+    @throws[IllegalArgumentException]("if the value is already set")
+    def toCompleteUpdated(currentValue: Option[T]): Option[T] =
+      currentValue match {
+        case Some(_) => throw new IllegalArgumentException("Cannot set a value that is already set.")
+        case None    => Some(value)
+      }
+  }
 
   final case class Updated[T, PartialFieldType <: Partial[T]](value: PartialFieldType)
-      extends PartialOptionalNestedField[T, PartialFieldType]
+      extends PartialOptionalNestedField[T, PartialFieldType] {
+    @throws[IllegalArgumentException]("if the value is not set")
+    def toCompleteUpdated(currentValue: Option[T]): Option[T] = {
+      val updatedComplete = value.toCompleteUpdated {
+        currentValue match {
+          case Some(innerValue) => innerValue
+          case None =>
+            throw new IllegalArgumentException("Cannot update a value that is not set.")
+        }
+      }
+      Some(updatedComplete)
+    }
+  }
 
-  final case object Deleted extends PartialOptionalNestedField[Nothing, Nothing]
+  final case class Deleted[T, PartialFieldType <: Partial[T]]()
+      extends PartialOptionalNestedField[T, PartialFieldType] {
+    @throws[IllegalArgumentException]("if the value is not set")
+    def toCompleteUpdated(currentValue: Option[T]): Option[T] =
+      currentValue match {
+        case Some(_) => None
+        case None    => throw new IllegalArgumentException("Cannot delete a value that is not set.")
+      }
+  }
 
-  final case object Unchanged extends PartialOptionalNestedField[Nothing, Nothing]
-
-  def deleted[T, PartialFieldType <: Partial[T]]: PartialOptionalNestedField[T, PartialFieldType] =
-    // the casting is necessary because it is impossible to make T covariant in the trait definition
-    // because it appears in an invariant position in trait Partial[T]
-    Deleted.asInstanceOf[PartialOptionalNestedField[T, PartialFieldType]]
-
-  def unchanged[T, PartialFieldType <: Partial[T]]: PartialOptionalNestedField[T, PartialFieldType] =
-    // same comment as above
-    Unchanged.asInstanceOf[PartialOptionalNestedField[T, PartialFieldType]]
+  final case class Unchanged[T, PartialFieldType <: Partial[T]]()
+      extends PartialOptionalNestedField[T, PartialFieldType] {
+    def toCompleteUpdated(currentValue: Option[T]): Option[T] = currentValue
+  }
 }

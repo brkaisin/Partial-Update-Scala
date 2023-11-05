@@ -21,13 +21,13 @@ object CirceCodecs {
           case c: HCursor =>
             if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
             else tDecoder(c).map(PartialField.Updated(_))
-          case _: FailedCursor => Right(PartialField.Unchanged)
+          case _: FailedCursor => Right(PartialField.Unchanged())
         }
     }
 
   implicit def partialFieldEncoder[T](implicit tEncoder: Encoder[T]): Encoder[PartialField[T]] = {
     case PartialField.Updated(value) => tEncoder(value)
-    case PartialField.Unchanged      => Json.obj() // this value should be dropped by the outside encoder
+    case PartialField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
   /* Partial nested field */
@@ -42,7 +42,7 @@ object CirceCodecs {
           case c: HCursor =>
             if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
             else partialDecoder(c).map(PartialNestedField.Updated(_))
-          case _: FailedCursor => Right(PartialNestedField.unchanged)
+          case _: FailedCursor => Right(PartialNestedField.Unchanged())
         }
     }
 
@@ -50,7 +50,7 @@ object CirceCodecs {
       partialEncoder: Encoder[PartialFieldType]
   ): Encoder[PartialNestedField[T, PartialFieldType]] = {
     case PartialNestedField.Updated(value) => partialEncoder(value)
-    case PartialNestedField.Unchanged      => Json.obj() // this value should be dropped by the outside encoder
+    case PartialNestedField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
   /* Partial optional field */
@@ -61,16 +61,16 @@ object CirceCodecs {
       final override def tryDecode(c: ACursor): Decoder.Result[PartialOptionalField[T]] =
         c match {
           case c: HCursor =>
-            if (c.value.isNull) Right(PartialOptionalField.Deleted)
+            if (c.value.isNull) Right(PartialOptionalField.Deleted())
             else tDecoder(c).map(PartialOptionalField.Updated(_))
-          case _: FailedCursor => Right(PartialOptionalField.Unchanged)
+          case _: FailedCursor => Right(PartialOptionalField.Unchanged())
         }
     }
 
   implicit def partialOptionalFieldEncoder[T](implicit tEncoder: Encoder[T]): Encoder[PartialOptionalField[T]] = {
     case PartialOptionalField.Updated(value) => tEncoder(value)
-    case PartialOptionalField.Unchanged      => Json.obj() // this value should be dropped by the outside encoder
-    case PartialOptionalField.Deleted        => Json.Null
+    case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
+    case PartialOptionalField.Deleted()      => Json.Null
   }
 
   /* Partial optional nested field */
@@ -84,14 +84,14 @@ object CirceCodecs {
       final override def tryDecode(c: ACursor): Decoder.Result[PartialOptionalNestedField[T, PartialFieldType]] =
         c match {
           case c: HCursor =>
-            if (c.value.isNull) Right(PartialOptionalNestedField.deleted)
+            if (c.value.isNull) Right(PartialOptionalNestedField.Deleted[T, PartialFieldType]())
             else
               c.downField("initialValue").as[T] match {
                 case Right(initialValue) =>
                   Right(PartialOptionalNestedField.Set(initialValue))
                 case _ => partialDecoder(c).map(PartialOptionalNestedField.Updated(_))
               }
-          case _: FailedCursor => Right(PartialOptionalNestedField.unchanged)
+          case _: FailedCursor => Right(PartialOptionalNestedField.Unchanged[T, PartialFieldType]())
         }
     }
 
@@ -101,8 +101,8 @@ object CirceCodecs {
   ): Encoder[PartialOptionalNestedField[T, PartialFieldType]] = {
     case PartialOptionalNestedField.Set(value)     => Json.obj("initialValue" -> tEncoder(value))
     case PartialOptionalNestedField.Updated(value) => partialEncoder(value)
-    case PartialOptionalNestedField.Deleted        => Json.Null
-    case PartialOptionalNestedField.Unchanged      => Json.obj() // this value should be dropped by the outside encoder
+    case PartialOptionalNestedField.Deleted()      => Json.Null
+    case PartialOptionalNestedField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
   /* List elem alterations */
@@ -166,7 +166,7 @@ object CirceCodecs {
               c.as[List[ListElemAlteration[Id, T, PartialFieldType]]]
                 .map(PartialListField.ElemsUpdated(_))
                 .orElse(c.as[List[Id]].map(PartialListField.ElemsReordered(_)))
-          case _: FailedCursor => Right(PartialListField.unchanged)
+          case _: FailedCursor => Right(PartialListField.Unchanged())
         }
     }
 
@@ -176,7 +176,7 @@ object CirceCodecs {
     case PartialListField.ElemsUpdated(alterations) =>
       alterations.asJson
     case PartialListField.ElemsReordered(newOrder) => newOrder.asJson
-    case PartialListField.Unchanged                => Json.obj() // this value should be dropped by the outside encoder
+    case PartialListField.Unchanged()              => Json.obj() // this value should be dropped by the outside encoder
   }
 
   /* Any partial */
