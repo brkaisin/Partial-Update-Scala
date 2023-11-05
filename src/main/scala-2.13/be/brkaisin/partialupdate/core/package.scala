@@ -8,4 +8,7 @@ package object core {
 
   // todo: test it
   type SimplePartialListField[Id, T <: Identifiable[T, Id]] = PartialListField[Id, T, PartialField[T]]
+
+  type PartialOptionalListField[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]] =
+    PartialOptionalField[List[T], PartialListField[Id, T, PartialFieldType]]
 }
