@@ -5,6 +5,6 @@ package be.brkaisin.partialupdate.util
   * @tparam T the type of the class
   * @tparam Id the type of the id
   */
-trait Identifiable[T, Id] {
+trait Identifiable[T, Id] { self: T =>
   def id: Id
 }
