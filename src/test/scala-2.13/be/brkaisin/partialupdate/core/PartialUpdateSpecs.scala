@@ -210,15 +210,15 @@ class PartialUpdateSpecs extends munit.FunSuite {
     val partial = PartialBaz(
       foos = PartialListField.ElemsUpdated(
         List(
-          PartialListField.ListElemAlteration.ElemUpdated(
+          PartialListField.ListOperation.ElemUpdated(
             id1,
             PartialIdentifiableFoo(
               string = PartialField.Updated("stringModified"),
               int = PartialField.Updated(12)
             )
           ),
-          PartialListField.ListElemAlteration.ElemDeleted(id2),
-          PartialListField.ListElemAlteration.ElemAdded(
+          PartialListField.ListOperation.ElemDeleted(id2),
+          PartialListField.ListOperation.ElemAdded(
             id3,
             IdentifiableFoo(
               id = id3,

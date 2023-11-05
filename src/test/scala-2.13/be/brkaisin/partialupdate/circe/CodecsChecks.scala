@@ -45,18 +45,18 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   def simplePartialOptionalFieldGen[T](gen: Gen[T]): Gen[SimplePartialOptionalField[T]] =
     partialOptionalFieldGen(gen, gen.map(PartialField.Updated(_)))
 
-  def listElemAlterationGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
+  def listOperationGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
       idGen: Gen[Id],
       tGen: Gen[T],
       partialGen: Gen[PartialFieldType]
-  ): Gen[PartialListField.ListElemAlteration[Id, T, PartialFieldType]] =
+  ): Gen[PartialListField.ListOperation[Id, T, PartialFieldType]] =
     Gen.oneOf(
-      tGen.map(t => PartialListField.ListElemAlteration.ElemAdded[Id, T, PartialFieldType](t.id, t)),
+      tGen.map(t => PartialListField.ListOperation.ElemAdded[Id, T, PartialFieldType](t.id, t)),
       for {
         id      <- idGen
         partial <- partialGen
-      } yield PartialListField.ListElemAlteration.ElemUpdated[Id, T, PartialFieldType](id, partial),
-      idGen.map(PartialListField.ListElemAlteration.ElemDeleted[Id, T, PartialFieldType])
+      } yield PartialListField.ListOperation.ElemUpdated[Id, T, PartialFieldType](id, partial),
+      idGen.map(PartialListField.ListOperation.ElemDeleted[Id, T, PartialFieldType])
     )
 
   def partialListFieldGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
@@ -66,7 +66,7 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   ): Gen[PartialListField[Id, T, PartialFieldType]] =
     Gen.oneOf(
       Gen
-        .nonEmptyListOf(listElemAlterationGen(idGen, tGen, partialGen))
+        .nonEmptyListOf(listOperationGen(idGen, tGen, partialGen))
         .map(PartialListField.ElemsUpdated(_)),
       Gen.const(PartialListField.Unchanged[Id, T, PartialFieldType]())
     )

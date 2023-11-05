@@ -15,47 +15,47 @@ sealed trait PartialListField[Id, T <: Identifiable[T, Id], PartialFieldType <: 
 object PartialListField {
 
   /**
-    * A [[ListElemAlteration]] is an alteration that can be applied to an element of a list. An element can be added,
-    * updated or deleted.
+    * A [[ListOperation]] is a basic operation on a list. An element can be added, updated or deleted.
+    *
     * @tparam Id the type of the id of the elements of the list
     * @tparam T the type of the elements of the list
     * @tparam PartialFieldType the type of the [[Partial]] that can be applied to the elements of the list
     */
-  sealed trait ListElemAlteration[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]
+  sealed trait ListOperation[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]
 
-  object ListElemAlteration {
+  object ListOperation {
     /* The element is added */
     final case class ElemAdded[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](id: Id, value: T)
-        extends ListElemAlteration[Id, T, PartialFieldType]
+        extends ListOperation[Id, T, PartialFieldType]
 
     /* The element is updated */
     final case class ElemUpdated[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
         id: Id,
         value: PartialFieldType
-    ) extends ListElemAlteration[Id, T, PartialFieldType]
+    ) extends ListOperation[Id, T, PartialFieldType]
 
     /* The element is deleted */
     final case class ElemDeleted[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](id: Id)
-        extends ListElemAlteration[Id, T, PartialFieldType]
+        extends ListOperation[Id, T, PartialFieldType]
   }
 
   /* The list is updated */
   final case class ElemsUpdated[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
-      alterations: List[ListElemAlteration[Id, T, PartialFieldType]]
+      operations: List[ListOperation[Id, T, PartialFieldType]]
   ) extends PartialListField[Id, T, PartialFieldType] {
     @throws[IllegalArgumentException]("if an element is not in the list when updating or deleting it")
     def toCompleteUpdated(currentValue: List[T]): List[T] =
-      alterations.foldLeft(currentValue) {
-        case (currentCompleteValuesAcc, alteration) =>
-          alteration match {
-            case ListElemAlteration.ElemAdded(id, elem) =>
+      operations.foldLeft(currentValue) {
+        case (currentCompleteValuesAcc, operation) =>
+          operation match {
+            case ListOperation.ElemAdded(id, elem) =>
               if (id != elem.id)
                 throw new IllegalArgumentException(
                   s"Cannot add element with id ${elem.id} because it is different from the id $id"
                 )
               // add the new element
               currentCompleteValuesAcc :+ elem
-            case ListElemAlteration.ElemUpdated(id, partialValue) =>
+            case ListOperation.ElemUpdated(id, partialValue) =>
               // update the element
               val index = currentCompleteValuesAcc.indexWhere(_.id == id)
               if (index < 0)
@@ -66,7 +66,7 @@ object PartialListField {
                 index,
                 partialValue.toCompleteUpdated(currentCompleteValuesAcc(index))
               )
-            case ListElemAlteration.ElemDeleted(id) =>
+            case ListOperation.ElemDeleted(id) =>
               // delete the element
               currentCompleteValuesAcc.filter(_.id != id)
           }

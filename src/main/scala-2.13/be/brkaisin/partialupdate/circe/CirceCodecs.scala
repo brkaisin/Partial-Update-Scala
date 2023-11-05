@@ -1,6 +1,6 @@
 package be.brkaisin.partialupdate.circe
 
-import be.brkaisin.partialupdate.core.PartialListField.ListElemAlteration
+import be.brkaisin.partialupdate.core.PartialListField.ListOperation
 import be.brkaisin.partialupdate.core._
 import be.brkaisin.partialupdate.util.Identifiable
 import io.circe.Decoder.Result
@@ -89,7 +89,7 @@ object CirceCodecs {
     case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
-  /* List elem alterations */
+  /* List operations */
   sealed trait OperationType {
     val name: String
   }
@@ -102,31 +102,31 @@ object CirceCodecs {
 
   private val operationKey = "operation"
 
-  implicit def listElemAlterationEncoder[Id: Encoder, T <: Identifiable[T, Id]: Encoder, PartialFieldType <: Partial[
+  implicit def listOperationEncoder[Id: Encoder, T <: Identifiable[T, Id]: Encoder, PartialFieldType <: Partial[
     T
-  ]: Encoder]: Encoder[ListElemAlteration[Id, T, PartialFieldType]] = {
-    case alteration: ListElemAlteration.ElemAdded[Id, T, PartialFieldType] =>
-      deriveEncoder[ListElemAlteration.ElemAdded[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Add.name.asJson))(alteration)
-    case alteration: ListElemAlteration.ElemUpdated[Id, T, PartialFieldType] =>
-      deriveEncoder[ListElemAlteration.ElemUpdated[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Update.name.asJson))(alteration)
-    case alteration: ListElemAlteration.ElemDeleted[Id, T, PartialFieldType] =>
-      deriveEncoder[ListElemAlteration.ElemDeleted[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Delete.name.asJson))(alteration)
+  ]: Encoder]: Encoder[ListOperation[Id, T, PartialFieldType]] = {
+    case operation: ListOperation.ElemAdded[Id, T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemAdded[Id, T, PartialFieldType]]
+        .mapJsonObject(_.add(operationKey, OperationType.Add.name.asJson))(operation)
+    case operation: ListOperation.ElemUpdated[Id, T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemUpdated[Id, T, PartialFieldType]]
+        .mapJsonObject(_.add(operationKey, OperationType.Update.name.asJson))(operation)
+    case operation: ListOperation.ElemDeleted[Id, T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemDeleted[Id, T, PartialFieldType]]
+        .mapJsonObject(_.add(operationKey, OperationType.Delete.name.asJson))(operation)
   }
 
-  implicit def listElemAlterationDecoder[Id: Decoder, T <: Identifiable[T, Id]: Decoder, PartialFieldType <: Partial[
+  implicit def listOperationDecoder[Id: Decoder, T <: Identifiable[T, Id]: Decoder, PartialFieldType <: Partial[
     T
-  ]: Decoder]: Decoder[ListElemAlteration[Id, T, PartialFieldType]] =
+  ]: Decoder]: Decoder[ListOperation[Id, T, PartialFieldType]] =
     (c: HCursor) =>
       c.downField(operationKey).as[String] match {
         case Right(OperationType.Add.name) =>
-          deriveDecoder[ListElemAlteration.ElemAdded[Id, T, PartialFieldType]].apply(c)
+          deriveDecoder[ListOperation.ElemAdded[Id, T, PartialFieldType]].apply(c)
         case Right(OperationType.Update.name) =>
-          deriveDecoder[ListElemAlteration.ElemUpdated[Id, T, PartialFieldType]].apply(c)
+          deriveDecoder[ListOperation.ElemUpdated[Id, T, PartialFieldType]].apply(c)
         case Right(OperationType.Delete.name) =>
-          deriveDecoder[ListElemAlteration.ElemDeleted[Id, T, PartialFieldType]].apply(c)
+          deriveDecoder[ListOperation.ElemDeleted[Id, T, PartialFieldType]].apply(c)
         case Right(unknownOperation) =>
           Left(DecodingFailure(CustomReason(s"Unknown operation type: $unknownOperation"), c.history))
         case Left(_) =>
@@ -147,7 +147,7 @@ object CirceCodecs {
           case c: HCursor =>
             if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
             else
-              c.as[List[ListElemAlteration[Id, T, PartialFieldType]]]
+              c.as[List[ListOperation[Id, T, PartialFieldType]]]
                 .map(PartialListField.ElemsUpdated(_))
                 .orElse(c.as[List[Id]].map(PartialListField.ElemsReordered(_)))
           case _: FailedCursor => Right(PartialListField.Unchanged())
@@ -157,8 +157,8 @@ object CirceCodecs {
   implicit def partialListFieldEncoder[Id: Encoder, T <: Identifiable[T, Id]: Encoder, PartialFieldType <: Partial[
     T
   ]: Encoder]: Encoder[PartialListField[Id, T, PartialFieldType]] = {
-    case PartialListField.ElemsUpdated(alterations) =>
-      alterations.asJson
+    case PartialListField.ElemsUpdated(operations) =>
+      operations.asJson
     case PartialListField.ElemsReordered(newOrder) => newOrder.asJson
     case PartialListField.Unchanged()              => Json.obj() // this value should be dropped by the outside encoder
   }
