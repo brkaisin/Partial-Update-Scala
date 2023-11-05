@@ -49,14 +49,14 @@ final class CodecsChecks extends Properties("Codecs Checks") {
       idGen: Gen[Id],
       tGen: Gen[T],
       partialGen: Gen[PartialFieldType]
-  ): Gen[PartialListField.ListOperation[Id, T, PartialFieldType]] =
+  ): Gen[ListOperation[Id, T, PartialFieldType]] =
     Gen.oneOf(
-      tGen.map(t => PartialListField.ListOperation.ElemAdded[Id, T, PartialFieldType](t.id, t)),
+      tGen.map(t => ListOperation.ElemAdded[Id, T, PartialFieldType](t.id, t)),
       for {
         id      <- idGen
         partial <- partialGen
-      } yield PartialListField.ListOperation.ElemUpdated[Id, T, PartialFieldType](id, partial),
-      idGen.map(PartialListField.ListOperation.ElemDeleted[Id, T, PartialFieldType])
+      } yield ListOperation.ElemUpdated[Id, T, PartialFieldType](id, partial),
+      idGen.map(ListOperation.ElemDeleted[Id, T, PartialFieldType])
     )
 
   def partialListFieldGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](

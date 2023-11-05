@@ -1,6 +1,5 @@
 package be.brkaisin.partialupdate.circe
 
-import be.brkaisin.partialupdate.core.PartialListField.ListOperation
 import be.brkaisin.partialupdate.core._
 import be.brkaisin.partialupdate.util.Identifiable
 import io.circe.Decoder.Result
