@@ -34,9 +34,8 @@ object CirceCodecs {
   }
 
   /* Partial nested field */
-  implicit def partialNestedFieldDecoder[T, PartialFieldType <: Partial[T]](implicit
-      partialDecoder: Decoder[PartialFieldType]
-  ): Decoder[PartialNestedField[T, PartialFieldType]] =
+  implicit def partialNestedFieldDecoder[T, PartialFieldType <: Partial[T]: Decoder]
+      : Decoder[PartialNestedField[T, PartialFieldType]] =
     new Decoder[PartialNestedField[T, PartialFieldType]] {
       def apply(c: HCursor): Result[PartialNestedField[T, PartialFieldType]] = tryDecode(c)
 
@@ -44,7 +43,7 @@ object CirceCodecs {
         c match {
           case c: HCursor =>
             if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
-            else partialDecoder(c).map(PartialNestedField.Updated(_))
+            else c.as[PartialFieldType].map(PartialNestedField.Updated(_))
           case _: FailedCursor => Right(PartialNestedField.Unchanged())
         }
     }
