@@ -266,9 +266,10 @@ The partial updates are serialized as follows:
 ```json
 {
   "nickname": {
-    "Set": "Raymond"
+    "initialValue": "Raymond"
   }
 }
+
 ```
 
 **John:**
