@@ -96,9 +96,9 @@ val partialUpdateJohn: PartialPerson = PartialPerson(
   address = PartialNestedField.Updated(
     PartialAddress(street = PartialField.Updated("Partial Street"), zip = PartialField.Updated("54321"))
   ),
-  bestFriends = PartialListField.ElemsUpdated(operations = List(ElemDeleted(id = 1))),
+  bestFriends = PartialIdentifiableListField.ElemsUpdated(operations = List(ElemDeleted(id = 1))),
   otherFriends = PartialOptionalField.Updated(
-    PartialListField.ElemsUpdated(operations =
+    PartialIdentifiableListField.ElemsUpdated(operations =
       List(ElemUpdated(id = 2, value = partialUpdateRay), ElemAdded(id = 1, value = jack))
     )
   )
@@ -123,7 +123,8 @@ case class PartialPerson(
                           name: PartialField[String] = PartialField.Unchanged(),
                           nickname: SimplePartialOptionalField[String] = PartialOptionalField.Unchanged(),
                           address: PartialNestedField[Address, PartialAddress] = PartialNestedField.Unchanged(),
-                          bestFriends: PartialListField[Person.Id, Person, PartialPerson] = PartialListField.Unchanged(),
+                          bestFriends: PartialIdentifiableListField[Person.Id, Person, PartialPerson] =
+                          PartialIdentifiableListField.Unchanged(),
                           otherFriends: PartialOptionalListField[Person.Id, Person, PartialPerson] = PartialOptionalField.Unchanged()
                         ) extends Partial[Person] {
   // ...
@@ -132,7 +133,8 @@ case class PartialPerson(
 ```
 
 where `Partial` is a type class that represents a partial update,
-and `PartialField`, `PartialNestedField`, `PartialOptionalField`, `PartialListField`, ... are type classes that
+and `PartialField`, `PartialNestedField`, `PartialOptionalField`, `PartialIdentifiableListField`, ... are type classes
+that
 represent the different types of partial updates that can be performed on a field. All these classes also
 extend `Partial`, which allows to nest partial updates.
 
@@ -220,7 +222,8 @@ as a JSON object. See more about this in the example below.
 
 A list partial update can consist in adding, updating, deleting or reordering elements. The library is designed such as
 it is not possible to reorder elements at the same time as the three other operations. We thus have two types of partial
-list field types: `PartialListField.ElemsUpdated` and `PartialListField.ElemsReordered`. The first is only represented
+list field types: `PartialIdentifiableListField.ElemsUpdated` and `PartialIdentifiableListField.ElemsReordered`. The
+first is only represented
 with a list of operations, while the second is represented with a list of indexes. The codec will encode the list of
 operations or indexes. In the second case, in order to recognize the type of operations in the JSON, the codec will add
 a field "operation" in the JSON, which can take the values "add", "update" or "delete".
@@ -237,9 +240,9 @@ val partialUpdateJohn: PartialPerson = PartialPerson(
   address = PartialNestedField.Updated(
     PartialAddress(street = PartialField.Updated("Partial Street"), zip = PartialField.Updated("54321"))
   ),
-  bestFriends = PartialListField.ElemsUpdated(operations = List(ElemDeleted(id = 1))),
+  bestFriends = PartialIdentifiableListField.ElemsUpdated(operations = List(ElemDeleted(id = 1))),
   otherFriends = PartialOptionalField.Updated(
-    PartialListField.ElemsUpdated(operations =
+    PartialIdentifiableListField.ElemsUpdated(operations =
       List(ElemUpdated(id = 2, value = partialUpdateRay), ElemAdded(id = 1, value = jack))
     )
   )

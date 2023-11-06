@@ -52,11 +52,11 @@ object PartialUpdator {
       ): C = partialUpdate(ev(partial), currentComplete)
     }
 
-  implicit def partialListFieldUpdator[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]
-      : PartialUpdator[PartialListField[Id, T, PartialFieldType]] =
-    new PartialUpdator[PartialListField[Id, T, PartialFieldType]] {
-      def updated[C](partial: PartialListField[Id, T, PartialFieldType], currentComplete: C)(implicit
-          ev: PartialListField[Id, T, PartialFieldType] <:< Partial[C]
+  implicit def partialIdentifiableListFieldUpdator[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]]
+      : PartialUpdator[PartialIdentifiableListField[Id, T, PartialFieldType]] =
+    new PartialUpdator[PartialIdentifiableListField[Id, T, PartialFieldType]] {
+      def updated[C](partial: PartialIdentifiableListField[Id, T, PartialFieldType], currentComplete: C)(implicit
+          ev: PartialIdentifiableListField[Id, T, PartialFieldType] <:< Partial[C]
       ): C = partialUpdate(ev(partial), currentComplete)
     }
 

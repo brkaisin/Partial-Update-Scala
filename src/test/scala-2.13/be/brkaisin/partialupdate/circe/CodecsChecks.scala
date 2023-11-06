@@ -49,26 +49,26 @@ final class CodecsChecks extends Properties("Codecs Checks") {
       idGen: Gen[Id],
       tGen: Gen[T],
       partialGen: Gen[PartialFieldType]
-  ): Gen[ListOperation[Id, T, PartialFieldType]] =
+  ): Gen[IdentifiableListOperation[Id, T, PartialFieldType]] =
     Gen.oneOf(
-      tGen.map(t => ListOperation.ElemAdded[Id, T, PartialFieldType](t.id, t)),
+      tGen.map(t => IdentifiableListOperation.ElemAdded[Id, T, PartialFieldType](t.id, t)),
       for {
         id      <- idGen
         partial <- partialGen
-      } yield ListOperation.ElemUpdated[Id, T, PartialFieldType](id, partial),
-      idGen.map(ListOperation.ElemDeleted[Id, T, PartialFieldType])
+      } yield IdentifiableListOperation.ElemUpdated[Id, T, PartialFieldType](id, partial),
+      idGen.map(IdentifiableListOperation.ElemDeleted[Id, T, PartialFieldType])
     )
 
-  def partialListFieldGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
+  def partialIdentifiableListFieldGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
       idGen: Gen[Id],
       tGen: Gen[T],
       partialGen: Gen[PartialFieldType]
-  ): Gen[PartialListField[Id, T, PartialFieldType]] =
+  ): Gen[PartialIdentifiableListField[Id, T, PartialFieldType]] =
     Gen.oneOf(
       Gen
         .nonEmptyListOf(listOperationGen(idGen, tGen, partialGen))
-        .map(PartialListField.ElemsUpdated(_)),
-      Gen.const(PartialListField.Unchanged[Id, T, PartialFieldType]())
+        .map(PartialIdentifiableListField.ElemsUpdated(_)),
+      Gen.const(PartialIdentifiableListField.Unchanged[Id, T, PartialFieldType]())
     )
 
   lazy val fooGen: Gen[Foo] = for {
@@ -124,7 +124,7 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   } yield Baz(foos)
 
   lazy val partialBazGen: Gen[PartialBaz] = for {
-    foos <- partialListFieldGen[java.util.UUID, IdentifiableFoo, PartialIdentifiableFoo](
+    foos <- partialIdentifiableListFieldGen[java.util.UUID, IdentifiableFoo, PartialIdentifiableFoo](
       uuidGen,
       identifiableFooGen,
       partialIdentifiableFooGen
