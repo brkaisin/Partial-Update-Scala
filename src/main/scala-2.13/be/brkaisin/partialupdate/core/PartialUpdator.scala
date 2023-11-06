@@ -15,7 +15,7 @@ import scala.language.experimental.macros
 trait PartialUpdator[P] {
 
   /**
-    * Update a value of type T with a [[Partial]].
+    * Update a value of type C with a [[Partial]] of type P.
     * @param partial the [[Partial]] to apply
     * @param currentComplete the value to partially update
     * @tparam C the type of the value to partially update
