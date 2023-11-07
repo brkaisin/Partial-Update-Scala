@@ -82,19 +82,81 @@ object CirceCodecs {
     case PartialOptionalField.Unchanged()    => Json.obj() // this value should be dropped by the outside encoder
   }
 
-  /* List operations */
-  sealed trait OperationType {
+  /* List operation */
+  sealed trait ListOperationType {
     val name: String
   }
 
-  private object OperationType {
-    case object Add extends OperationType { val name = "add" }
-    case object Update extends OperationType { val name = "update" }
-    case object Delete extends OperationType { val name = "delete" }
+  private object ListOperationType {
+    case object Add extends ListOperationType { val name = "add" }
+    case object Update extends ListOperationType { val name = "update" }
+    case object Delete extends ListOperationType { val name = "delete" }
   }
 
-  private val operationKey = "operation"
+  private val listOperationKey = "operation"
 
+  /* List operation */
+  implicit def listOperationEncoder[T: Encoder, PartialFieldType <: Partial[T]: Encoder]
+      : Encoder[ListOperation[T, PartialFieldType]] = {
+    case operation: ListOperation.ElemAdded[T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemAdded[T, PartialFieldType]]
+        .addKeyValue(listOperationKey, ListOperationType.Add.name)
+        .apply(operation)
+    case operation: ListOperation.ElemUpdated[T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemUpdated[T, PartialFieldType]]
+        .addKeyValue(listOperationKey, ListOperationType.Update.name)
+        .apply(operation)
+    case operation: ListOperation.ElemDeleted[T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemDeleted[T, PartialFieldType]]
+        .addKeyValue(listOperationKey, ListOperationType.Delete.name)
+        .apply(operation)
+  }
+
+  implicit def listOperationDecoder[T: Decoder, PartialFieldType <: Partial[T]: Decoder]
+      : Decoder[ListOperation[T, PartialFieldType]] =
+    (c: HCursor) =>
+      c.downField(listOperationKey).as[String] match {
+        case Right(ListOperationType.Add.name) =>
+          deriveDecoder[ListOperation.ElemAdded[T, PartialFieldType]].apply(c)
+        case Right(ListOperationType.Update.name) =>
+          deriveDecoder[ListOperation.ElemUpdated[T, PartialFieldType]].apply(c)
+        case Right(ListOperationType.Delete.name) =>
+          deriveDecoder[ListOperation.ElemDeleted[T, PartialFieldType]].apply(c)
+        case Right(unknownOperation) =>
+          Left(DecodingFailure(CustomReason(s"Unknown list operation type: $unknownOperation"), c.history))
+        case Left(_) =>
+          Left(DecodingFailure(MissingField, c.history))
+      }
+
+  /* Partial list field */
+  implicit def partialListFieldDecoder[T: Decoder, PartialFieldType <: Partial[T]: Decoder]
+      : Decoder[PartialListField[T, PartialFieldType]] =
+    new Decoder[PartialListField[T, PartialFieldType]] {
+      def apply(c: HCursor): Result[PartialListField[T, PartialFieldType]] = tryDecode(c)
+
+      final override def tryDecode(
+          c: ACursor
+      ): Decoder.Result[PartialListField[T, PartialFieldType]] =
+        c match {
+          case c: HCursor =>
+            if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
+            else
+              c.as[List[ListOperation[T, PartialFieldType]]]
+                .map(PartialListField.ElemsUpdated(_))
+                .orElse(c.as[List[Int]].map(PartialListField.ElemsReordered(_)))
+          case _: FailedCursor => Right(PartialListField.Unchanged())
+        }
+    }
+
+  implicit def partialListFieldEncoder[T: Encoder, PartialFieldType <: Partial[T]: Encoder]
+      : Encoder[PartialListField[T, PartialFieldType]] = {
+    case PartialListField.ElemsUpdated(operations) =>
+      operations.asJson
+    case PartialListField.ElemsReordered(newOrder) => newOrder.asJson
+    case PartialListField.Unchanged()              => Json.obj() // this value should be dropped by the outside encoder
+  }
+
+  /* Identifiable list operation */
   implicit def identifiableListOperationEncoder[Id: Encoder, T <: Identifiable[
     T,
     Id
@@ -103,13 +165,16 @@ object CirceCodecs {
   ]: Encoder]: Encoder[IdentifiableListOperation[Id, T, PartialFieldType]] = {
     case operation: IdentifiableListOperation.ElemAdded[Id, T, PartialFieldType] =>
       deriveEncoder[IdentifiableListOperation.ElemAdded[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Add.name.asJson))(operation)
+        .addKeyValue(listOperationKey, ListOperationType.Add.name)
+        .apply(operation)
     case operation: IdentifiableListOperation.ElemUpdated[Id, T, PartialFieldType] =>
       deriveEncoder[IdentifiableListOperation.ElemUpdated[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Update.name.asJson))(operation)
+        .addKeyValue(listOperationKey, ListOperationType.Update.name)
+        .apply(operation)
     case operation: IdentifiableListOperation.ElemDeleted[Id, T, PartialFieldType] =>
       deriveEncoder[IdentifiableListOperation.ElemDeleted[Id, T, PartialFieldType]]
-        .mapJsonObject(_.add(operationKey, OperationType.Delete.name.asJson))(operation)
+        .addKeyValue(listOperationKey, ListOperationType.Delete.name)
+        .apply(operation)
   }
 
   implicit def identifiableListOperationDecoder[Id: Decoder, T <: Identifiable[
@@ -119,15 +184,15 @@ object CirceCodecs {
     T
   ]: Decoder]: Decoder[IdentifiableListOperation[Id, T, PartialFieldType]] =
     (c: HCursor) =>
-      c.downField(operationKey).as[String] match {
-        case Right(OperationType.Add.name) =>
+      c.downField(listOperationKey).as[String] match {
+        case Right(ListOperationType.Add.name) =>
           deriveDecoder[IdentifiableListOperation.ElemAdded[Id, T, PartialFieldType]].apply(c)
-        case Right(OperationType.Update.name) =>
+        case Right(ListOperationType.Update.name) =>
           deriveDecoder[IdentifiableListOperation.ElemUpdated[Id, T, PartialFieldType]].apply(c)
-        case Right(OperationType.Delete.name) =>
+        case Right(ListOperationType.Delete.name) =>
           deriveDecoder[IdentifiableListOperation.ElemDeleted[Id, T, PartialFieldType]].apply(c)
         case Right(unknownOperation) =>
-          Left(DecodingFailure(CustomReason(s"Unknown operation type: $unknownOperation"), c.history))
+          Left(DecodingFailure(CustomReason(s"Unknown identifiable list operation type: $unknownOperation"), c.history))
         case Left(_) =>
           Left(DecodingFailure(MissingField, c.history))
       }

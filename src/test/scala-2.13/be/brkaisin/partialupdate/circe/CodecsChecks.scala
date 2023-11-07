@@ -9,19 +9,27 @@ import io.circe.syntax.EncoderOps
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Prop, Properties}
 
+import java.util.UUID
+
 final class CodecsChecks extends Properties("Codecs Checks") {
 
   /* Generators */
-  lazy val stringGen: Gen[String]       = Gen.alphaNumStr
-  lazy val intGen: Gen[Int]             = Arbitrary.arbitrary[Int]
-  lazy val booleanGen: Gen[Boolean]     = Gen.prob(0.5) // equivalent to Gen.oneOf(true, false) but funnier
-  lazy val uuidGen: Gen[java.util.UUID] = Gen.uuid
+  lazy val stringGen: Gen[String]   = Gen.alphaNumStr
+  lazy val intGen: Gen[Int]         = Arbitrary.arbitrary[Int]
+  lazy val booleanGen: Gen[Boolean] = Gen.prob(0.5) // equivalent to Gen.oneOf(true, false) but funnier
+  lazy val uuidGen: Gen[UUID]       = Gen.uuid
 
   def partialFieldGen[T](gen: Gen[T]): Gen[PartialField[T]] =
     Gen.oneOf(
       gen.map(PartialField.Updated(_)),
       Gen.const(PartialField.Unchanged[T]())
     )
+
+  // sometimes, generating a partial field that can be unchanged is not what we want. For example,
+  // if a nested element of a list is updated, it makes no sense to say that it was updated with
+  // an unchanged value. This generator is here to avoid this case.
+  def notUnchangedPartialFieldGen[T](gen: Gen[T]): Gen[PartialField[T]] =
+    gen.map(PartialField.Updated(_))
 
   def partialNestedFieldGen[T, PartialFieldType <: Partial[T]](
       gen: Gen[PartialFieldType]
@@ -45,7 +53,35 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   def simplePartialOptionalFieldGen[T](gen: Gen[T]): Gen[SimplePartialOptionalField[T]] =
     partialOptionalFieldGen(gen, gen.map(PartialField.Updated(_)))
 
-  def listOperationGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
+  def listOperationGen[T, PartialFieldType <: Partial[T]](
+      tGen: Gen[T],
+      partialGen: Gen[PartialFieldType]
+  ): Gen[ListOperation[T, PartialFieldType]] =
+    Gen.oneOf(
+      for {
+        maybeIndex <- Gen.option(intGen)
+        t          <- tGen
+      } yield ListOperation.ElemAdded[T, PartialFieldType](maybeIndex, t),
+      for {
+        index   <- intGen
+        partial <- partialGen
+      } yield ListOperation.ElemUpdated[T, PartialFieldType](index, partial),
+      intGen.map(ListOperation.ElemDeleted[T, PartialFieldType])
+    )
+
+  def partialListFieldGen[T, PartialFieldType <: Partial[T]](
+      tGen: Gen[T],
+      notUnchangedPartialGen: Gen[PartialFieldType]
+  ): Gen[PartialListField[T, PartialFieldType]] =
+    Gen.oneOf(
+      Gen
+        .nonEmptyListOf(listOperationGen(tGen, notUnchangedPartialGen))
+        .map(PartialListField.ElemsUpdated(_)),
+      Gen.nonEmptyListOf(intGen).map(PartialListField.ElemsReordered[T, PartialFieldType]),
+      Gen.const(PartialListField.Unchanged[T, PartialFieldType]())
+    )
+
+  def identifiableListOperationGen[Id, T <: Identifiable[T, Id], PartialFieldType <: Partial[T]](
       idGen: Gen[Id],
       tGen: Gen[T],
       partialGen: Gen[PartialFieldType]
@@ -66,8 +102,9 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   ): Gen[PartialIdentifiableListField[Id, T, PartialFieldType]] =
     Gen.oneOf(
       Gen
-        .nonEmptyListOf(listOperationGen(idGen, tGen, partialGen))
+        .nonEmptyListOf(identifiableListOperationGen(idGen, tGen, partialGen))
         .map(PartialIdentifiableListField.ElemsUpdated(_)),
+      Gen.nonEmptyListOf(idGen).map(PartialIdentifiableListField.ElemsReordered[Id, T, PartialFieldType]),
       Gen.const(PartialIdentifiableListField.Unchanged[Id, T, PartialFieldType]())
     )
 
@@ -124,12 +161,22 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   } yield Baz(foos)
 
   lazy val partialBazGen: Gen[PartialBaz] = for {
-    foos <- partialIdentifiableListFieldGen[java.util.UUID, IdentifiableFoo, PartialIdentifiableFoo](
+    foos <- partialIdentifiableListFieldGen[UUID, IdentifiableFoo, PartialIdentifiableFoo](
       uuidGen,
       identifiableFooGen,
       partialIdentifiableFooGen
     )
   } yield PartialBaz(foos)
+
+  lazy val quxGen: Gen[Qux] = for {
+    ids  <- Gen.listOf(uuidGen)
+    foos <- Gen.listOf(fooGen)
+  } yield Qux(ids, foos)
+
+  lazy val partialQuxGen: Gen[PartialQux] = for {
+    ids  <- partialListFieldGen[UUID, PartialField[UUID]](uuidGen, notUnchangedPartialFieldGen(uuidGen))
+    foos <- partialListFieldGen[Foo, PartialFoo](fooGen, partialFooGen)
+  } yield PartialQux(ids, foos)
 
   /**
     * Round trip a value through its codec.
@@ -172,5 +219,9 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   property("Codec[Baz] works") = codecPropertyGen(bazGen)
 
   property("Codec[PartialBaz] works") = codecPropertyGen(partialBazGen)
+
+  property("Codec[Qux] works") = codecPropertyGen(quxGen)
+
+  property("Codec[PartialQux] works") = codecPropertyGen(partialQuxGen)
 
 }

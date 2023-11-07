@@ -186,7 +186,7 @@ class PartialUpdateSpecs extends munit.FunSuite {
     )(partialBabarWithNoneFromNone.applyPartialUpdate(completeBabarWithoutFoo))
   }
 
-  test("Update of a partial list field works") {
+  test("Update of a partial identifiable list field works") {
     val id1 = java.util.UUID.randomUUID()
     val id2 = java.util.UUID.randomUUID()
     val id3 = java.util.UUID.randomUUID()

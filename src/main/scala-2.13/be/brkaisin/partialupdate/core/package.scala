@@ -6,7 +6,8 @@ package object core {
   // type aliases
   type SimplePartialOptionalField[T] = PartialOptionalField[T, PartialField[T]]
 
-  // todo: test it
+  type SimplePartialListField[T] = PartialListField[T, PartialField[T]]
+
   type SimplePartialIdentifiableListField[Id, T <: Identifiable[T, Id]] =
     PartialIdentifiableListField[Id, T, PartialField[T]]
 
