@@ -1,7 +1,7 @@
 package be.brkaisin.partialupdate.core
 
 /**
-  * A [[PartialField]] is the simplest [[Partial]] that can be applied to a value of type T.
+  * [[PartialField]] is the simplest [[Partial]] that can be applied to a value of type T.
   * It can be used to update a field of a case class, or to not update it.
   * @tparam T the type of the value to update
   */

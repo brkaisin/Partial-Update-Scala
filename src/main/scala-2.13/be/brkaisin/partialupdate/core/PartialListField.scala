@@ -1,7 +1,7 @@
 package be.brkaisin.partialupdate.core
 
 /**
-  * A [[PartialListField]] is a [[Partial]] that can be applied to a list of values of type T that can not be uniquely
+  * [[PartialListField]] is a [[Partial]] that can be applied to a list of values of type T that can not be uniquely
   * identified. It can be used to update a list of values, reorder it, or to not update it.
   * @tparam T the type of the elements of the list
   * @tparam PartialFieldType the type of the [[Partial]] that can be applied to the elements of the list
