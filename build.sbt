@@ -14,25 +14,38 @@ Compile / scalacOptions ++= Seq(
   "-Ywarn-dead-code"
 )
 
-val circeVersion    = "0.14.3"
-val circeDependency = "io.circe" %% (_: String) % circeVersion
-def circeDependencies =
+val circeVersion = "0.14.3"
+val circeDep     = "io.circe" %% (_: String) % circeVersion
+def circeDeps =
   List(
-    circeDependency("circe-core"),
-    circeDependency("circe-generic"),
-    circeDependency("circe-parser"),
-    circeDependency("circe-shapes"),
-    circeDependency("circe-generic-extras")
+    circeDep("circe-core"),
+    circeDep("circe-generic"),
+    circeDep("circe-parser"),
+    circeDep("circe-shapes"),
+    circeDep("circe-generic-extras")
   )
 
-val magnoliaDependencies = Seq(
+val scalaReflectDep = "org.scala-lang" % "scala-reflect" % "2.13.12" % Provided
+
+val magnoliaDeps = Seq(
   "com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.6",
-  "org.scala-lang" % "scala-reflect" % "2.13.12" % Provided
+  scalaReflectDep
 )
 
-val testDependencies = Seq(
+val testDeps = Seq(
   "org.scalacheck" %% "scalacheck" % "1.17.0",
   "org.scalameta" %% "munit" % "0.7.29"
 ).map(_ % Test)
 
-libraryDependencies ++= circeDependencies ++ magnoliaDependencies ++ testDependencies
+lazy val core = project
+  .in(file("core"))
+  .settings(
+    libraryDependencies ++= magnoliaDeps ++ testDeps
+  )
+
+lazy val circe = project
+  .in(file("circe"))
+  .settings(
+    libraryDependencies ++= circeDeps ++ testDeps
+  )
+  .dependsOn(core, core % "test -> test")
