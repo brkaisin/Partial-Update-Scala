@@ -1,6 +1,6 @@
 package be.brkaisin.partialupdate.core
 
-import be.brkaisin.partialupdate.models._
+import be.brkaisin.partialupdate.models.{Foo, PartialFoo, PartialQux, Qux}
 
 import java.util.UUID
 
@@ -12,27 +12,23 @@ class PartialListFieldSpecs extends munit.FunSuite {
 
   val foo1: Foo = Foo(
     string = "string",
-    int = 1,
-    maybeString = Some("maybeString"),
-    maybeInt = Some(2)
+    int = 1
   )
 
   val foo2: Foo = Foo(
     string = "string2",
-    int = 3,
-    maybeString = Some("maybeString2"),
-    maybeInt = Some(4)
+    int = 3
   )
 
-  val complete: Qux = Qux(
+  val qux: Qux = Qux(
     ids = List(id1, id2),
     foos = List(foo1, foo2)
   )
 
-  test("Update of a 'simple' partial list field works") {
+  test("Partial update of a 'simple' partial list field works when the list is updated") {
 
     // ids (simple partial list field) are updated, foos are unchanged
-    val partial = PartialQux(
+    val partialQux = PartialQux(
       ids = PartialListField.ElemsUpdated(
         List(
           ListOperation.ElemUpdated(
@@ -58,18 +54,18 @@ class PartialListFieldSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.applyPartialUpdate(complete),
-      complete.copy(
+      partialQux.applyPartialUpdate(qux),
+      qux.copy(
         ids = List(id4, id2, id3, id1)
       )
     )
 
   }
 
-  test("Update of a 'nested' partial list field works") {
+  test("Partial update of a 'nested' partial list field works when the list is updated") {
 
     // foos (nested partial list field) are updated, ids are unchanged
-    val partial = PartialQux(
+    val partialQux = PartialQux(
       ids = PartialListField.Unchanged(),
       foos = PartialListField.ElemsUpdated(
         List(
@@ -77,9 +73,7 @@ class PartialListFieldSpecs extends munit.FunSuite {
             0,
             PartialFoo(
               string = PartialField.Updated("stringModified"),
-              int = PartialField.Updated(12),
-              maybeString = PartialOptionalField.Deleted(),
-              maybeInt = PartialOptionalField.Deleted()
+              int = PartialField.Updated(12)
             )
           ),
           ListOperation.ElemDeleted(1),
@@ -87,18 +81,14 @@ class PartialListFieldSpecs extends munit.FunSuite {
             None, // will be added at the end
             Foo(
               string = "string3",
-              int = 4,
-              maybeString = Some("maybeString3"),
-              maybeInt = Some(5)
+              int = 4
             )
           ),
           ListOperation.ElemAdded(
             Some(0), // will be added at the beginning
             Foo(
               string = "string4",
-              int = 6,
-              maybeString = Some("maybeString4"),
-              maybeInt = Some(7)
+              int = 6
             )
           )
         )
@@ -106,36 +96,30 @@ class PartialListFieldSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.applyPartialUpdate(complete),
-      complete.copy(
+      partialQux.applyPartialUpdate(qux),
+      qux.copy(
         foos = List(
           Foo(
             string = "string4",
-            int = 6,
-            maybeString = Some("maybeString4"),
-            maybeInt = Some(7)
+            int = 6
           ),
           Foo(
             string = "stringModified",
-            int = 12,
-            maybeString = None,
-            maybeInt = None
+            int = 12
           ),
           Foo(
             string = "string3",
-            int = 4,
-            maybeString = Some("maybeString3"),
-            maybeInt = Some(5)
+            int = 4
           )
         )
       )
     )
   }
 
-  test("Reorder of a 'simple' partial list field works") {
+  test("Partial update of a 'simple' partial list field works when the list is reordered") {
 
     // ids (simple partial list field) are reordered, foos are unchanged
-    val partial = PartialQux(
+    val partialQux = PartialQux(
       ids = PartialListField.ElemsReordered(
         List(1, 0)
       ),
@@ -143,18 +127,17 @@ class PartialListFieldSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.applyPartialUpdate(complete),
-      complete.copy(
+      partialQux.applyPartialUpdate(qux),
+      qux.copy(
         ids = List(id2, id1)
       )
     )
 
   }
 
-  test("Reorder of a 'nested' partial list field works") {
-
+  test("Partial update of a 'nested' partial list field works when the list is reordered") {
     // foos (nested partial list field) are reordered, ids are unchanged
-    val partial = PartialQux(
+    val partialQux = PartialQux(
       ids = PartialListField.Unchanged(),
       foos = PartialListField.ElemsReordered(
         List(1, 0)
@@ -162,8 +145,8 @@ class PartialListFieldSpecs extends munit.FunSuite {
     )
 
     assertEquals(
-      partial.applyPartialUpdate(complete),
-      complete.copy(
+      partialQux.applyPartialUpdate(qux),
+      qux.copy(
         foos = List(foo2, foo1)
       )
     )

@@ -10,9 +10,7 @@ class CodecsSpecs extends munit.FunSuite {
   test("Simple partial update from a JSON works") {
     val complete: Foo = Foo(
       string = "string",
-      int = 1,
-      maybeString = Some("maybeString"),
-      maybeInt = Some(2)
+      int = 1
     )
 
     val json = """{"string":"stringModified","maybeInt":null}"""
@@ -21,29 +19,31 @@ class CodecsSpecs extends munit.FunSuite {
 
     assertEquals(
       partial.applyPartialUpdate(complete),
-      complete.copy(string = "stringModified", int = 1, maybeInt = None)
+      complete.copy(string = "stringModified", int = 1)
     )
   }
 
   test("Nested partial update from a JSON works") {
+    val bar = Bar(Foo("string1", 1), Foo("string2", 2))
+
     // 1. Modifying/Deleting some fields in the nested object
-    val json = """{"foo":{"string":"stringModified","maybeInt":null},"maybeBoolean":null}"""
+    val json = """{"foo1":{"string":"stringModified","maybeInt":null},"maybeBoolean":null}"""
 
     val partial = decode[PartialBar](json).toTry.get
 
     assertEquals(
-      partial.applyPartialUpdate(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
-      Bar(Foo("stringModified", 1, Some("maybeString"), None), None)
+      partial.applyPartialUpdate(bar),
+      Bar(bar.foo1.copy(string = "stringModified"), bar.foo2)
     )
 
     // 2. Not modifying the nested object
-    val json2 = """{"maybeBoolean":null}"""
+    val json2 = """{}"""
 
     val partial2 = decode[PartialBar](json2).toTry.get
 
     assertEquals(
-      partial2.applyPartialUpdate(Bar(Foo("string", 1, Some("maybeString"), Some(2)), Some(true))),
-      Bar(Foo("string", 1, Some("maybeString"), Some(2)), None)
+      partial2.applyPartialUpdate(bar),
+      bar
     )
   }
 
@@ -54,8 +54,8 @@ class CodecsSpecs extends munit.FunSuite {
     val partial = decode[PartialBabar](json).toTry.get
 
     assertEquals(
-      partial.applyPartialUpdate(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
-      Babar(Some(Foo("stringModified", 1, Some("maybeString"), None)))
+      partial.applyPartialUpdate(Babar(Some(Foo("string", 1)))),
+      Babar(Some(Foo("stringModified", 1)))
     )
 
     // 2. With a None value
@@ -71,8 +71,8 @@ class CodecsSpecs extends munit.FunSuite {
 
     // 2.2. Initial value is defined
     assertEquals(
-      partial2.applyPartialUpdate(Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))),
-      Babar(Some(Foo("string", 1, Some("maybeString"), Some(2))))
+      partial2.applyPartialUpdate(Babar(Some(Foo("string", 1)))),
+      Babar(Some(Foo("string", 1)))
     )
   }
 }

@@ -109,33 +109,26 @@ final class CodecsChecks extends Properties("Codecs Checks") {
     )
 
   lazy val fooGen: Gen[Foo] = for {
-    string      <- stringGen
-    int         <- intGen
-    maybeString <- Gen.option(stringGen)
-    maybeInt    <- Gen.option(intGen)
-  } yield Foo(string, int, maybeString, maybeInt)
+    string <- stringGen
+    int    <- intGen
+  } yield Foo(string, int)
 
   lazy val partialFooGen: Gen[PartialFoo] = for {
-    string      <- partialFieldGen(stringGen)
-    int         <- partialFieldGen(intGen)
-    maybeString <- simplePartialOptionalFieldGen(stringGen)
-    maybeInt    <- simplePartialOptionalFieldGen(intGen)
+    string <- partialFieldGen(stringGen)
+    int    <- partialFieldGen(intGen)
     // if only unchanged values, retry. This is a case that should never happen. A more detailed explanation are on the way...
-    if !(string == PartialField.Unchanged[String]() && int == PartialField
-      .Unchanged[Int]() && maybeString == PartialOptionalField
-      .Unchanged[String, PartialField[String]]() && maybeInt == PartialOptionalField
-      .Unchanged[Int, PartialField[Int]]())
-  } yield PartialFoo(string, int, maybeString, maybeInt)
+    if !(string == PartialField.Unchanged[String]() && int == PartialField.Unchanged[Int]())
+  } yield PartialFoo(string, int)
 
   lazy val barGen: Gen[Bar] = for {
-    foo          <- fooGen
-    maybeBoolean <- Gen.option(booleanGen)
-  } yield Bar(foo, maybeBoolean)
+    foo1 <- fooGen
+    foo2 <- fooGen
+  } yield Bar(foo1, foo2)
 
   lazy val partialBarGen: Gen[PartialBar] = for {
-    foo          <- partialNestedFieldGen[Foo, PartialFoo](partialFooGen)
-    maybeBoolean <- simplePartialOptionalFieldGen(booleanGen)
-  } yield PartialBar(foo, maybeBoolean)
+    foo1 <- partialNestedFieldGen[Foo, PartialFoo](partialFooGen)
+    foo2 <- partialNestedFieldGen[Foo, PartialFoo](partialFooGen)
+  } yield PartialBar(foo1, foo2)
 
   lazy val babarGen: Gen[Babar] = for {
     maybeFoo <- Gen.option(fooGen)
