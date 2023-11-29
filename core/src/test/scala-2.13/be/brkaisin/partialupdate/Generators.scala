@@ -65,7 +65,8 @@ object Generators {
         index   <- intGen
         partial <- partialGen
       } yield ListOperation.ElemUpdated[T, PartialFieldType](index, partial),
-      intGen.map(ListOperation.ElemDeletedAtIndex[T, PartialFieldType])
+      intGen.map(ListOperation.ElemDeletedAtIndex[T, PartialFieldType]),
+      tGen.map(ListOperation.ElemDeleted[T, PartialFieldType])
     )
 
   def partialListFieldGen[T, PartialFieldType <: Partial[T]](

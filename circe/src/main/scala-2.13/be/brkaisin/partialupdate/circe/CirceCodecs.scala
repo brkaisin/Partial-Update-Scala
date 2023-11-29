@@ -148,7 +148,7 @@ object CirceCodecs {
         case Right(ListOperationType.Update.name) =>
           deriveDecoder[ListOperation.ElemUpdated[T, PartialFieldType]].apply(c)
         case Right(ListOperationType.Delete.name) =>
-          deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)
+          deriveDecoder[ListOperation.ElemDeleted[T, PartialFieldType]].apply(c)
         case Right(ListOperationType.DeleteAtIndex.name) =>
           deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)
         case Right(unknownOperation) =>
