@@ -49,3 +49,10 @@ lazy val circe = project
     libraryDependencies ++= circeDeps ++ testDeps
   )
   .dependsOn(core, core % "test -> test")
+
+lazy val diff = project
+  .in(file("diff"))
+  .settings(
+    libraryDependencies ++= List(scalaReflectDep) ++ testDeps
+  )
+  .dependsOn(core, core % "test -> test")

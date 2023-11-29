@@ -1,13 +1,14 @@
 # Partial update in Scala
 
-This repository is a tiny library for representing and performing partial updates of case classes in Scala, as well as
-serializing and deserializing these operations.
+This repository is a tiny library for representing, deriving and performing partial updates of case classes in Scala,
+as well as serializing and deserializing these operations.
 
 The library has almost zero dependencies, except [Magnolia](https://github.com/softwaremill/magnolia) for type class
 derivation, which could be later replaced by custom meta-programming
 or [built-in derivation](https://docs.scala-lang.org/scala3/reference/contextual/derivation.html) (Scala 3 only). The
-library also uses [Circe](https://circe.github.io/circe/) for serialization and deserialization, but this could be moved
-to a separate module in the future, allowing the user to choose its own serialization library.
+library also uses [Circe](https://circe.github.io/circe/) for serialization and deserialization, but this lies in a
+separate module so that the
+user can choose its own serialization library.
 
 ## Motivation
 
@@ -189,13 +190,13 @@ Two things to note here:
 ## Serialization
 
 As mentioned before, it is often useful to be able to serialize and deserialize partial updates. The library provides
-this feature out of the box, using [Circe](https://circe.github.io/circe/). This is an opionated choice, but it could
-be moved to a separate module in the future (it is already in a separate package), allowing the user to choose its own
-serialization library without inheriting the Circe dependency. Every partial field type has an encoder and a decoder
-which are combined by Circe to derive the encoder and decoder of the case class that represents the partial update.
-Let's focus on each partial field type separately.
+this feature out of the box, using [Circe](https://circe.github.io/circe/). This is an opionated choice and this is why
+the implementation lies in
+[a separate module](circe), allowing the user to choose its own serialization library without inheriting the Circe
+dependency. Every partial field type has an encoder and a decoder which are combined by Circe to derive the encoder and
+decoder of the case class that represents the partial update. Let's focus on each partial field type separately.
 
-### Simple partial field types
+### Simple partial field type
 
 For simple partial field types, represented with class `PartialField`, the codec will only encode and decode the value
 if it is updated, and the decoder will only decode values that are present in the JSON. An unchanged value is therefore
@@ -327,10 +328,47 @@ The partial updates are serialized as follows:
 }
 ```
 
+## Partial update computation (diff)
+
+Another [useful feature of the library](diff) is the possibility to compute the partial update that happened between two
+instances of a case class. For every partial field type, we define a way to compute the partial update between two
+instances of the same type. This is represented by the
+trait [PartialDiffComputor](diff/src/main/scala-2.13/be/brkaisin/partialupdate/diff/PartialDiffComputor.scala).
+This [file](diff/src/main/scala-2.13/be/brkaisin/partialupdate/diff/Implicits.scala) contains implicits for every
+partial
+field type of the library. Once you have these implicits in scope, you can derive the diff computor for a case class by
+calling `PartialDiffComputorMacro.derive`:
+
+```scala
+final case class Foo(string: String, int: Int)
+
+final case class PartialFoo(string: PartialField[String], int: PartialField[Int]) extends Partial[Foo] {
+...
+}
+
+val fooPartialDiffComputor: PartialDiffComputor[Foo, PartialFoo] =
+  PartialDiffComputorMacro.derivePartialDiffComputor // make it implicit if needed
+```
+
+As you can guess, Scala macros are used to derive the diff computor. When adding Scala 3 support, this will be replaced
+by new meta-programming system. Once you have a diff computor, you can compute the partial update between two instances
+of a case class by calling `computePartialDiff`:
+
+```scala
+val foo1 = Foo("foo", 1)
+val foo2 = Foo("bar", 1)
+val diff = fooPartialDiffComputor.computePartialDiff(foo1, foo2) // PartialFoo(string = Updated(bar), int = Unchanged())
+```
+
+### Note concerning partial list field types
+
+**todo: explain that the computation of the diff between two lists is opinionated since there exists several ways to
+compute the diff between two lists**
+
 ## Future work
 
-- [ ] Scala 3 support (currently, the library is written in Scala 2.13).
-- [ ] Make the tests more unitary, by avoiding mixing different partial field types in the same basic tests, and
+- [ ] Scala 3 support (currently, the library is written for Scala 2.13 only).
+- [x] Make the tests more unitary, by avoiding mixing different partial field types in the same basic tests, and
   splitting the tests in different files.
 - [ ] Automatic code generation of the case classes that represent the partial updates.
 - [ ] Add compilation type safety guarantying that the classes for partials updates are consistent with the case
@@ -339,8 +377,8 @@ The partial updates are serialized as follows:
   the compilation time, which is not desirable.
 - [ ] [Potentially] Remove Magnolia and replace it with custom meta-programming or Scala 3 built-in type class
   derivation.
-- [ ] Add a "module" for serialization and deserialization, allowing the user to choose its own serialization library.
-- [ ] Add the possibility to derive the partial update that happened between two instances of a case class. Now, this
+- [x] Add a "module" for serialization and deserialization, allowing the user to choose its own serialization library.
+- [x] Add the possibility to derive the partial update that happened between two instances of a case class. Now, this
   partial update is provided by the user. This new feature thus consists in computing a diff.
 - [ ] Implement more partial fields types, like `PartialMapField`, `PartialSetField`, `PartialEnum2Field`, ...
 - [ ] Implement an alternative for partial update that does not throw errors in the JVM but rather returns an `Either`
