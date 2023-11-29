@@ -33,7 +33,16 @@ object PartialListField {
                 )
               // update the element
               currentCompleteValuesAcc.updated(index, value.applyPartialUpdate(currentCompleteValuesAcc(index)))
-            case ListOperation.ElemDeleted(index) =>
+            case ListOperation.ElemDeleted(value) =>
+              val index = currentCompleteValuesAcc.indexOf(value)
+              if (index == -1)
+                throw new IllegalArgumentException(
+                  s"Cannot delete element $value because it is not in the list"
+                )
+              else
+                // delete the element
+                currentCompleteValuesAcc.patch(index, Nil, 1)
+            case ListOperation.ElemDeletedAtIndex(index) =>
               if (index < 0 || index >= currentCompleteValuesAcc.size)
                 throw new IllegalArgumentException(
                   s"Cannot delete element at index $index because it is out of bounds"

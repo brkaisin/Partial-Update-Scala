@@ -92,6 +92,14 @@ object CirceCodecs {
     case object Add extends ListOperationType { val name = "add" }
     case object Update extends ListOperationType { val name = "update" }
     case object Delete extends ListOperationType { val name = "delete" }
+
+    case object Delete extends ListOperationType {
+      val name = "delete"
+    }
+
+    case object DeleteAtIndex extends ListOperationType {
+      val name = "deleteAtIndex"
+    }
   }
 
   private val listOperationKey = "operation"
@@ -111,6 +119,10 @@ object CirceCodecs {
       deriveEncoder[ListOperation.ElemDeleted[T, PartialFieldType]]
         .addKeyValue(listOperationKey, ListOperationType.Delete.name)
         .apply(operation)
+    case operation: ListOperation.ElemDeletedAtIndex[T, PartialFieldType] =>
+      deriveEncoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]]
+        .addKeyValue(listOperationKey, ListOperationType.DeleteAtIndex.name)
+        .apply(operation)
   }
 
   implicit def listOperationDecoder[T: Decoder, PartialFieldType <: Partial[T]: Decoder]
@@ -123,6 +135,9 @@ object CirceCodecs {
           deriveDecoder[ListOperation.ElemUpdated[T, PartialFieldType]].apply(c)
         case Right(ListOperationType.Delete.name) =>
           deriveDecoder[ListOperation.ElemDeleted[T, PartialFieldType]].apply(c)
+          deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)
+        case Right(ListOperationType.DeleteAtIndex.name) =>
+          deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)
         case Right(unknownOperation) =>
           Left(DecodingFailure(CustomReason(s"Unknown list operation type: $unknownOperation"), c.history))
         case Left(_) =>

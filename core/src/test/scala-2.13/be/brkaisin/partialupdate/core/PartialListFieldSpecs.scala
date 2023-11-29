@@ -35,7 +35,7 @@ class PartialListFieldSpecs extends munit.FunSuite {
             0,
             PartialField.Updated(id3)
           ),
-          ListOperation.ElemDeleted(1),
+          ListOperation.ElemDeletedAtIndex(1),
           ListOperation.ElemAdded(
             None, // will be added at the end
             id1
@@ -76,7 +76,7 @@ class PartialListFieldSpecs extends munit.FunSuite {
               int = PartialField.Updated(12)
             )
           ),
-          ListOperation.ElemDeleted(1),
+          ListOperation.ElemDeletedAtIndex(1),
           ListOperation.ElemAdded(
             None, // will be added at the end
             Foo(

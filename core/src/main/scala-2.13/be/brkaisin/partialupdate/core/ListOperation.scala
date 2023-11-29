@@ -18,6 +18,10 @@ object ListOperation {
   final case class ElemUpdated[T, PartialFieldType <: Partial[T]](index: Int, value: PartialFieldType)
       extends ListOperation[T, PartialFieldType]
 
+  /* The element is deleted at the given index */
+  final case class ElemDeletedAtIndex[T, PartialFieldType <: Partial[T]](index: Int)
+      extends ListOperation[T, PartialFieldType]
+
   /* The element is deleted */
-  final case class ElemDeleted[T, PartialFieldType <: Partial[T]](index: Int) extends ListOperation[T, PartialFieldType]
+  final case class ElemDeleted[T, PartialFieldType <: Partial[T]](value: T) extends ListOperation[T, PartialFieldType]
 }
