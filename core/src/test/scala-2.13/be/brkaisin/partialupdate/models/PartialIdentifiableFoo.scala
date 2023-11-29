@@ -1,11 +1,11 @@
 package be.brkaisin.partialupdate.models
 
-import be.brkaisin.partialupdate.core.{Partial, PartialField, PartialUpdator}
+import be.brkaisin.partialupdate.core.{Partial, PartialField, PartialImmutableField, PartialUpdator}
 
 final case class PartialIdentifiableFoo(
-    // id is not here because it is not a field that can be updated
-    string: PartialField[String],
-    int: PartialField[Int]
+    id: PartialImmutableField[java.util.UUID] = PartialImmutableField.Unchanged(),
+    string: PartialField[String] = PartialField.Unchanged(),
+    int: PartialField[Int] = PartialField.Unchanged()
 ) extends Partial[IdentifiableFoo] {
   def applyPartialUpdate(currentValue: IdentifiableFoo): IdentifiableFoo =
     PartialUpdator[PartialIdentifiableFoo].updated[IdentifiableFoo](this, currentValue.copy())

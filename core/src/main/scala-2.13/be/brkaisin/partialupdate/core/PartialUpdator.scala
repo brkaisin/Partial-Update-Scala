@@ -30,6 +30,13 @@ object PartialUpdator {
   private def partialUpdate[C, P <: Partial[C]](partial: P, currentComplete: C): C =
     partial.applyPartialUpdate(currentComplete)
 
+  implicit def partialImmutableFieldUpdator[T]: PartialUpdator[PartialImmutableField[T]] =
+    new PartialUpdator[PartialImmutableField[T]] {
+      def updated[C](partial: PartialImmutableField[T], currentComplete: C)(implicit
+          ev: PartialImmutableField[T] <:< Partial[C]
+      ): C = partialUpdate(ev(partial), currentComplete)
+    }
+
   implicit def partialFieldUpdator[T]: PartialUpdator[PartialField[T]] =
     new PartialUpdator[PartialField[T]] {
       def updated[C](partial: PartialField[T], currentComplete: C)(implicit ev: PartialField[T] <:< Partial[C]): C =

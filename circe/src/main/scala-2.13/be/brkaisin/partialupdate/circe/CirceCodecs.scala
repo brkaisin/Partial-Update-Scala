@@ -15,6 +15,21 @@ import io.circe.syntax.EncoderOps
   * and part of your own codecs.
   * */
 object CirceCodecs {
+  /* Immutable field */
+  implicit def partialImmutableFieldDecoder[T]: Decoder[PartialImmutableField[T]] =
+    new Decoder[PartialImmutableField[T]] {
+      def apply(c: HCursor): Result[PartialImmutableField[T]] = tryDecode(c)
+
+      final override def tryDecode(c: ACursor): Decoder.Result[PartialImmutableField[T]] =
+        c match {
+          case _: FailedCursor => Right(PartialImmutableField.Unchanged())
+        }
+    }
+
+  implicit def partialImmutableFieldEncoder[T]: Encoder[PartialImmutableField[T]] = {
+    case PartialImmutableField.Unchanged() => Json.obj() // this value should be dropped by the outside encoder
+  }
+
   /* Partial field */
   implicit def partialFieldDecoder[T: Decoder]: Decoder[PartialField[T]] =
     new Decoder[PartialField[T]] {
@@ -91,7 +106,6 @@ object CirceCodecs {
   private object ListOperationType {
     case object Add extends ListOperationType { val name = "add" }
     case object Update extends ListOperationType { val name = "update" }
-    case object Delete extends ListOperationType { val name = "delete" }
 
     case object Delete extends ListOperationType {
       val name = "delete"
@@ -134,7 +148,6 @@ object CirceCodecs {
         case Right(ListOperationType.Update.name) =>
           deriveDecoder[ListOperation.ElemUpdated[T, PartialFieldType]].apply(c)
         case Right(ListOperationType.Delete.name) =>
-          deriveDecoder[ListOperation.ElemDeleted[T, PartialFieldType]].apply(c)
           deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)
         case Right(ListOperationType.DeleteAtIndex.name) =>
           deriveDecoder[ListOperation.ElemDeletedAtIndex[T, PartialFieldType]].apply(c)

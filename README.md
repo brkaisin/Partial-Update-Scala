@@ -203,6 +203,11 @@ not encoded. Since such a field do not represent an optional field, the decoder 
 to `null`
 in the JSON.
 
+### Immutable partial field type
+
+For immutable partial field types, represented with class `PartialImmutableField`, there is only one way to update the
+value: by not changing it. The codec will therefore encode nothing, and the decoder will decode nothing.
+
 ### Partial nested field
 
 For partial nested field types, represented with class `PartialNestedField`, the behavior is the same, except that the

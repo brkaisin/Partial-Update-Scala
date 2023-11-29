@@ -12,6 +12,9 @@ object Codecs {
   implicit val barCodec: Codec[Bar]               = deriveCodec
   implicit val partialBarCodec: Codec[PartialBar] = partialCodec(deriveCodec)
 
+  implicit val immutableFooCodec: Codec[ImmutableFoo]               = deriveCodec
+  implicit val partialImmutableFooCodec: Codec[PartialImmutableFoo] = partialCodec(deriveCodec)
+
   implicit val babarCodec: Codec[Babar]               = deriveCodec
   implicit val partialBabarCodec: Codec[PartialBabar] = partialCodec(deriveCodec)
 
