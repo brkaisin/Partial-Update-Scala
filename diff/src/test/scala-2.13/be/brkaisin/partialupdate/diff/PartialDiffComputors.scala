@@ -1,7 +1,7 @@
 package be.brkaisin.partialupdate.diff
 
+import be.brkaisin.partialupdate.diff.Implicits._
 import be.brkaisin.partialupdate.models._
-import Implicits._
 
 object PartialDiffComputors {
   implicitly[DummyImplicit]

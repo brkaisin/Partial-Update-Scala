@@ -1,7 +1,8 @@
-package be.brkaisin.partialupdate.diff
+package be.brkaisin.partialupdate.models
 
 import be.brkaisin.partialupdate.core.partialupdate.PartialUpdateDerivation
 import be.brkaisin.partialupdate.core.{Partial, PartialNestedField}
+import be.brkaisin.partialupdate.diff.{derivePartialDiffComputor, PartialDiffComputor}
 
 // See the comment in [[PartialBigFoo]] for an explanation of this code.
 final case class PartialBigBar(bigFoo: PartialNestedField[BigFoo, PartialBigFoo])
@@ -11,6 +12,6 @@ final case class PartialBigBar(bigFoo: PartialNestedField[BigFoo, PartialBigFoo]
 }
 
 object PartialBigBar {
-  import Implicits._
+  import be.brkaisin.partialupdate.diff.Implicits._
   implicit val partialDiffComputor: PartialDiffComputor[BigBar, PartialBigBar] = derivePartialDiffComputor
 }

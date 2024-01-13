@@ -1,6 +1,8 @@
-package be.brkaisin.partialupdate.diff
+package be.brkaisin.partialupdate.models
+
 import be.brkaisin.partialupdate.core.partialupdate.PartialUpdateDerivation
 import be.brkaisin.partialupdate.core.{Partial, PartialField, SimplePartialOptionalField}
+import be.brkaisin.partialupdate.diff.{derivePartialDiffComputor, PartialDiffComputor}
 
 // This class is used to test the derivation of a [[PartialDiffComputor]] in the companion object of a case class.
 // Together with [[PartialBigBar]], it is used to check that the derivation of a [[PartialDiffComputor]] finds the
@@ -12,6 +14,6 @@ final case class PartialBigFoo(int: PartialField[Int], maybeString: SimplePartia
 }
 
 object PartialBigFoo {
-  import Implicits._
+  import be.brkaisin.partialupdate.diff.Implicits._
   implicit val partialDiffComputor: PartialDiffComputor[BigFoo, PartialBigFoo] = derivePartialDiffComputor
 }
