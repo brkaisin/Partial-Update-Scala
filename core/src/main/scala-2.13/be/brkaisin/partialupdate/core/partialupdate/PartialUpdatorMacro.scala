@@ -27,11 +27,8 @@ object PartialUpdatorMacro {
     // Construct the partialTpe type field by field by calling the right implicit partialDiffComputor for each field
     val fieldsDiffTrees: List[c.universe.Tree] = fields.zip(partialFields).map {
       case (field, partialField) =>
-        val fieldName: c.universe.TermName = field.name.toTermName
-        val fieldType: c.universe.Type     = field.returnType
-
+        val fieldName: c.universe.TermName        = field.name.toTermName
         val partialFieldName: c.universe.TermName = partialField.name.toTermName
-        val partialFieldType: c.universe.Type     = partialField.returnType
 
         // Check that the field names match
         if (fieldName != partialFieldName)
@@ -39,6 +36,9 @@ object PartialUpdatorMacro {
             c.enclosingPosition,
             s"Field names don't match: $fieldName != $partialFieldName"
           )
+
+        val fieldType: c.universe.Type        = field.returnType
+        val partialFieldType: c.universe.Type = partialField.returnType
 
         // Check that the field types match
 

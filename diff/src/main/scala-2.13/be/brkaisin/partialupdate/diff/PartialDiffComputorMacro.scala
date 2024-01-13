@@ -26,9 +26,32 @@ object PartialDiffComputorMacro {
     // Construct the partialTpe type field by field by calling the right implicit partialDiffComputor for each field
     val fieldsDiffTrees: List[c.universe.Tree] = fields.zip(partialFields).map {
       case (field, partialField) =>
-        val fieldName: c.universe.TermName    = field.name.toTermName
+        val fieldName: c.universe.TermName        = field.name.toTermName
+        val partialFieldName: c.universe.TermName = partialField.name.toTermName
+
+        // Check that the field names match
+        if (fieldName != partialFieldName)
+          c.abort(
+            c.enclosingPosition,
+            s"Field names don't match: $fieldName != $partialFieldName"
+          )
+
         val fieldType: c.universe.Type        = field.returnType
         val partialFieldType: c.universe.Type = partialField.returnType
+
+        // Check that the field types match
+
+        // 1. Find the type of the field in the parent partial type
+        val partialFieldTypeT: c.universe.Type =
+          partialFieldType.baseType(weakTypeOf[Partial[_]].typeSymbol).typeArgs.head
+
+        // 2. Check that the field type in the partial is the same as the field type in the class
+        if (fieldType != partialFieldTypeT)
+          c.abort(
+            c.enclosingPosition,
+            s"Field types don't match for field $fieldName: $fieldType != $partialFieldTypeT"
+          )
+
         val partialFieldDiffComputorType: c.universe.Type =
           appliedType(weakTypeOf[PartialDiffComputor[_, _]].typeConstructor, fieldType, partialFieldType)
 
