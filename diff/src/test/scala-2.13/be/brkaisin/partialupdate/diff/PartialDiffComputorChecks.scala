@@ -18,7 +18,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
   // All the following generators are used to generate pairs of values of the same type, one of which is "updated" from
   // the other. Everything is done to emulate a plausible real-world scenario, instead of being purely random.
 
-  lazy val fooAndUpdateGen: Gen[(Foo, Foo)] = for {
+  implicit lazy val fooAndUpdateGen: Gen[(Foo, Foo)] = for {
     foo1               <- fooGen
     stringGen          <- Gen.alphaStr
     stringMaybeUpdated <- Gen.oneOf(foo1.string, stringGen)
@@ -32,7 +32,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     )
   } yield (foo1, foo2)
 
-  lazy val barAndUpdateGen: Gen[(Bar, Bar)] = for {
+  implicit lazy val barAndUpdateGen: Gen[(Bar, Bar)] = for {
     fooAndUpdate1 <- fooAndUpdateGen
     fooAndUpdate2 <- fooAndUpdateGen
     bar1 = Bar(fooAndUpdate1._1, fooAndUpdate2._1)
@@ -44,13 +44,13 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     )
   } yield (bar1, bar2)
 
-  lazy val immutableFooAndUpdateGen: Gen[(ImmutableFoo, ImmutableFoo)] = for {
+  implicit lazy val immutableFooAndUpdateGen: Gen[(ImmutableFoo, ImmutableFoo)] = for {
     string <- stringGen
     bar    <- barGen
     immutableFoo = ImmutableFoo(string, bar)
   } yield (immutableFoo, immutableFoo)
 
-  lazy val babarAndUpdateGen: Gen[(Babar, Babar)] = for {
+  implicit lazy val babarAndUpdateGen: Gen[(Babar, Babar)] = for {
     fooAndUpdate <- fooAndUpdateGen
     babar1 <- Gen.oneOf(
       Babar(Some(fooAndUpdate._1)),
@@ -63,7 +63,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     )
   } yield (babar1, babar2)
 
-  lazy val identifiableFooAndUpdateGen: Gen[(IdentifiableFoo, IdentifiableFoo)] = for {
+  implicit lazy val identifiableFooAndUpdateGen: Gen[(IdentifiableFoo, IdentifiableFoo)] = for {
     fooAndUpdate     <- fooAndUpdateGen
     id               <- Gen.uuid
     identifiableFoo1 <- Gen.const(IdentifiableFoo(id, fooAndUpdate._1.string, fooAndUpdate._1.int))
@@ -100,7 +100,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
 
   implicit val uuidOrdering: Ordering[UUID] = Ordering.by(_.toString)
 
-  lazy val bazAndUpdateGen: Gen[(Baz, Baz)] = for {
+  implicit lazy val bazAndUpdateGen: Gen[(Baz, Baz)] = for {
     (identifiableFoos, identifiableFoosUpdated) <- Gen.listOf(identifiableFooAndUpdateGen).map(_.unzip)
     mixedIdentifiableFoos                       <- mixIdentifiableLists[UUID, IdentifiableFoo](identifiableFoos, identifiableFoosUpdated)
     subListOfMixedIdentifiableFoos              <- subListOf(mixedIdentifiableFoos)
@@ -127,7 +127,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     maybeString <- Gen.option(stringGen)
   } yield BigFoo(int, maybeString)
 
-  lazy val bigFooAndUpdateGen: Gen[(BigFoo, BigFoo)] = for {
+  implicit lazy val bigFooAndUpdateGen: Gen[(BigFoo, BigFoo)] = for {
     bigFoo1        <- bigFooGen
     intGen         <- intGen
     maybeStringGen <- Gen.option(stringGen)
@@ -143,7 +143,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     bigFoo <- bigFooGen
   } yield BigBar(bigFoo)
 
-  lazy val bigBarAndUpdateGen: Gen[(BigBar, BigBar)] = for {
+  implicit lazy val bigBarAndUpdateGen: Gen[(BigBar, BigBar)] = for {
     bigFooAndUpdate1 <- bigFooAndUpdateGen
     bigFooAndUpdate2 <- bigFooAndUpdateGen
     bigBar1 = BigBar(bigFooAndUpdate1._1)
@@ -175,7 +175,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
       )
     } yield (list1, list2)
 
-  lazy val quxAndUpdateGen: Gen[(Qux, Qux)] = for {
+  implicit lazy val quxAndUpdateGen: Gen[(Qux, Qux)] = for {
     (ids, idsUpdated)   <- simpleListAndUpdateGen[UUID](Gen.uuid)
     (foos, foosUpdated) <- Gen.listOf(fooAndUpdateGen).map(_.unzip)
     qux1 = Qux(ids, foos)
@@ -187,29 +187,27 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     )
   } yield (qux1, qux2)
 
-  def partialDiffComputorPropertyGen[T, PartialFieldType <: Partial[T]](
-      pairGen: Gen[(T, T)]
-  )(implicit partialDiffComputor: PartialDiffComputor[T, PartialFieldType]): Prop =
+  def partialDiffComputorPropertyGen[T, PartialFieldType <: Partial[T]](implicit
+      pairGen: Gen[(T, T)],
+      partialDiffComputor: PartialDiffComputor[T, PartialFieldType]
+  ): Prop =
     forAll(pairGen) {
       case (t1, t2) =>
         val diff: PartialFieldType = computePartialDiff(t1, t2)
         diff.applyPartialUpdate(t1) == t2
     }
 
-  property("PartialDiffComputor[Foo, PartialFoo] works") =
-    partialDiffComputorPropertyGen[Foo, PartialFoo](fooAndUpdateGen)
+  property("PartialDiffComputor[Foo, PartialFoo] works") = partialDiffComputorPropertyGen[Foo, PartialFoo]
 
-  property("PartialDiffComputor[Bar, PartialBar] works") =
-    partialDiffComputorPropertyGen[Bar, PartialBar](barAndUpdateGen)
+  property("PartialDiffComputor[Bar, PartialBar] works") = partialDiffComputorPropertyGen[Bar, PartialBar]
 
   property("PartialDiffComputor[ImmutableFoo, PartialImmutableFoo] works") =
-    partialDiffComputorPropertyGen[ImmutableFoo, PartialImmutableFoo](immutableFooAndUpdateGen)
+    partialDiffComputorPropertyGen[ImmutableFoo, PartialImmutableFoo]
 
-  property("PartialDiffComputor[Babar, PartialBabar] works") =
-    partialDiffComputorPropertyGen[Babar, PartialBabar](babarAndUpdateGen)
+  property("PartialDiffComputor[Babar, PartialBabar] works") = partialDiffComputorPropertyGen[Babar, PartialBabar]
 
   property("PartialDiffComputor[IdentifiableFoo, PartialIdentifiableFoo] works") =
-    partialDiffComputorPropertyGen[IdentifiableFoo, PartialIdentifiableFoo](identifiableFooAndUpdateGen)
+    partialDiffComputorPropertyGen[IdentifiableFoo, PartialIdentifiableFoo]
 
   property("PartialDiffComputor[Baz, PartialBaz] works") = forAll(bazAndUpdateGen) {
     case (t1, t2) =>
@@ -230,8 +228,8 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
   }
 
   import PartialBigFoo.partialDiffComputor
-  property("PartialDiffComputor[BigFoo, PartialBigFoo] works") = partialDiffComputorPropertyGen(bigFooAndUpdateGen)
+  property("PartialDiffComputor[BigFoo, PartialBigFoo] works") = partialDiffComputorPropertyGen[BigFoo, PartialBigFoo]
 
   import PartialBigBar.{partialDiffComputor => partialDiffComputorBigBar} // to avoid name clash with PartialBigFoo
-  property("PartialDiffComputor[BigBar, PartialBigBar] works") = partialDiffComputorPropertyGen(bigBarAndUpdateGen)
+  property("PartialDiffComputor[BigBar, PartialBigBar] works") = partialDiffComputorPropertyGen[BigBar, PartialBigBar]
 }
