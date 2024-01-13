@@ -1,7 +1,5 @@
 package be.brkaisin.partialupdate.core
 
-import be.brkaisin.partialupdate.core.partialupdate.PartialUpdateDerivation
-
 /**
   * [[Partial]] is the core trait of the library. It represents a partial update of a value of type T.
   * You can also see it as a patch that can be applied to a value of type T.
