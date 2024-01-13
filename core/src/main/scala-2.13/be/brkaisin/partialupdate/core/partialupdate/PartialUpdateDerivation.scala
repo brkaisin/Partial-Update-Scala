@@ -2,11 +2,12 @@ package be.brkaisin.partialupdate.core.partialupdate
 
 import be.brkaisin.partialupdate.core.Partial
 
-import scala.language.experimental.macros
-
-trait PartialUpdateDerivation[T, PartialType <: Partial[T]] { self: PartialType =>
-  implicit def partialUpdator: PartialUpdator[T, PartialType] = macro PartialUpdatorMacro.impl[T, PartialType]
-
-  def autoDeriveUpdate(currentValue: T)(implicit partialUpdatorI: PartialUpdator[T, PartialType]): T =
-    partialUpdatorI.update(currentValue, self)
+/**
+  * Trait that can be mixed in to a Partial[T] to automatically derive the applyPartialUpdate method
+  * @tparam T the type of the value to update
+  * @tparam PartialType the type of the partial update
+  */
+trait PartialUpdateDerivation[T, PartialType <: Partial[T]] extends Partial[T] { self: PartialType =>
+  def autoDeriveUpdate(currentValue: T)(implicit partialUpdator: PartialUpdator[T, PartialType]): T =
+    partialUpdator.update(currentValue, self)
 }

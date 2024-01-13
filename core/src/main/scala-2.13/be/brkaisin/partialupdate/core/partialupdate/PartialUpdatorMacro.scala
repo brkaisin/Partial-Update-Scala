@@ -63,7 +63,4 @@ object PartialUpdatorMacro {
       q"(currentValue: $tpe, partial: $partialTpe) => new $tpe(..$fieldsDiffTrees)"
     }
   }
-
-  def derivePartialUpdator[T, PartialType <: Partial[T]]: PartialUpdator[T, PartialType] =
-    macro impl[T, PartialType]
 }
