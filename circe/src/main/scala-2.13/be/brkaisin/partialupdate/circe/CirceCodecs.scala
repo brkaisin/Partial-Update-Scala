@@ -264,6 +264,6 @@ object CirceCodecs {
 
   /* Any partial */
   def partialCodec[P <: Partial[_]](derivedCodec: Codec[P]): Codec[P] =
-    Codec.from(derivedCodec, derivedCodec.mapJson(_.dropEmptyValues))
+    Codec.from(derivedCodec, derivedCodec.dropEmptyValues)
 
 }
