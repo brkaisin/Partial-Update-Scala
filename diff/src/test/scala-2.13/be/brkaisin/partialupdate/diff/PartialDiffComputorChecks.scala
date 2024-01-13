@@ -2,7 +2,7 @@ package be.brkaisin.partialupdate.diff
 
 import be.brkaisin.partialupdate.Generators._
 import be.brkaisin.partialupdate.core.Partial
-import be.brkaisin.partialupdate.diff.Implicits._
+//import be.brkaisin.partialupdate.diff.Implicits._
 import be.brkaisin.partialupdate.diff.PartialDiffComputors._
 import be.brkaisin.partialupdate.models._
 import be.brkaisin.partialupdate.util.Identifiable
@@ -122,6 +122,39 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
     )
   } yield (baz1, baz2)
 
+  lazy val bigFooGen: Gen[BigFoo] = for {
+    int         <- intGen
+    maybeString <- Gen.option(stringGen)
+  } yield BigFoo(int, maybeString)
+
+  lazy val bigFooAndUpdateGen: Gen[(BigFoo, BigFoo)] = for {
+    bigFoo1        <- bigFooGen
+    intGen         <- intGen
+    maybeStringGen <- Gen.option(stringGen)
+    bigFoo2 <- Gen.oneOf(
+      bigFoo1,
+      BigFoo(intGen, maybeStringGen),
+      BigFoo(intGen, bigFoo1.maybeString),
+      BigFoo(bigFoo1.int, maybeStringGen)
+    )
+  } yield (bigFoo1, bigFoo2)
+
+  lazy val bigBarGen: Gen[BigBar] = for {
+    bigFoo <- bigFooGen
+  } yield BigBar(bigFoo)
+
+  lazy val bigBarAndUpdateGen: Gen[(BigBar, BigBar)] = for {
+    bigFooAndUpdate1 <- bigFooAndUpdateGen
+    bigFooAndUpdate2 <- bigFooAndUpdateGen
+    bigBar1 = BigBar(bigFooAndUpdate1._1)
+    bigBar2 <- Gen.oneOf(
+      bigBar1,
+      BigBar(bigFooAndUpdate1._2),
+      BigBar(bigFooAndUpdate2._1),
+      BigBar(bigFooAndUpdate2._2)
+    )
+  } yield (bigBar1, bigBar2)
+
   def simpleListAndUpdateGen[T](elemGen: Gen[T]): Gen[(List[T], List[T])] =
     for {
       list1            <- Gen.listOf(elemGen)
@@ -159,7 +192,7 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
   )(implicit partialDiffComputor: PartialDiffComputor[T, PartialFieldType]): Prop =
     forAll(pairGen) {
       case (t1, t2) =>
-        val diff: PartialFieldType = partialDiffComputor.computePartialDiff(t1, t2)
+        val diff: PartialFieldType = computePartialDiff(t1, t2)
         diff.applyPartialUpdate(t1) == t2
     }
 
@@ -180,18 +213,25 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
 
   property("PartialDiffComputor[Baz, PartialBaz] works") = forAll(bazAndUpdateGen) {
     case (t1, t2) =>
-      val diff = implicitly[PartialDiffComputor[Baz, PartialBaz]].computePartialDiff(t1, t2)
+      import PartialDiffComputors._
+      val diff = computePartialDiff(t1, t2)
       // we need to compare sets because the order of the elements is not guaranteed
       diff.applyPartialUpdate(t1).foos.toSet == t2.foos.toSet
   }
 
   property("PartialDiffComputor[Qux, PartialQux] works") = forAll(quxAndUpdateGen) {
     case (t1, t2) =>
-      val diff = implicitly[PartialDiffComputor[Qux, PartialQux]].computePartialDiff(t1, t2)
+      val diff = computePartialDiff(t1, t2)
       // we need to compare sets because the order of the elements is not guaranteed
       diff
         .applyPartialUpdate(t1)
         .ids
         .toSet == t2.ids.toSet && diff.applyPartialUpdate(t1).foos.toSet == t2.foos.toSet
   }
+
+  import PartialBigFoo.partialDiffComputor
+  property("PartialDiffComputor[BigFoo, PartialBigFoo] works") = partialDiffComputorPropertyGen(bigFooAndUpdateGen)
+
+  import PartialBigBar.{partialDiffComputor => partialDiffComputorBigBar} // to avoid name clash with PartialBigFoo
+  property("PartialDiffComputor[BigBar, PartialBigBar] works") = partialDiffComputorPropertyGen(bigBarAndUpdateGen)
 }

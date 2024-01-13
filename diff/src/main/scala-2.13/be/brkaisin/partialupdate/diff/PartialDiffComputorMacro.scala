@@ -56,7 +56,4 @@ object PartialDiffComputorMacro {
       """
     }
   }
-
-  def derivePartialDiffComputor[T, PartialType <: Partial[T]]: PartialDiffComputor[T, PartialType] =
-    macro impl[T, PartialType]
 }

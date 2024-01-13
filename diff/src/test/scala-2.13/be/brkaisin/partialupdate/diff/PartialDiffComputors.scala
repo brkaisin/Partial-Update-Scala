@@ -7,23 +7,23 @@ object PartialDiffComputors {
   implicitly[DummyImplicit]
 
   implicit val fooPartialDiffComputor: PartialDiffComputor[Foo, PartialFoo] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val barPartialDiffComputor: PartialDiffComputor[Bar, PartialBar] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val immutableFooPartialDiffComputor: PartialDiffComputor[ImmutableFoo, PartialImmutableFoo] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val babarPartialDiffComputor: PartialDiffComputor[Babar, PartialBabar] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val identifiableFooPartialDiffComputor: PartialDiffComputor[IdentifiableFoo, PartialIdentifiableFoo] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val bazPartialDiffComputor: PartialDiffComputor[Baz, PartialBaz] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 
   implicit val quxPartialDiffComputor: PartialDiffComputor[Qux, PartialQux] =
-    PartialDiffComputorMacro.derivePartialDiffComputor
+    derivePartialDiffComputor
 }
