@@ -14,6 +14,27 @@ Compile / scalacOptions ++= Seq(
   "-Ywarn-dead-code"
 )
 
+inThisBuild(
+  List(
+    name := "Partial-Update",
+    organization := "be.brkaisin",
+    description := "A tiny library to derive, apply and serialize partial updates on case classes",
+    version := "0.1",
+    homepage := Some(url("https://github.com/brkaisin/Partial-Update-Scala")),
+    licenses := List("MIT" -> url("http://www.opensource.org/licenses/mit-license.php")),
+    developers := List(
+      Developer(
+        "brkaisin",
+        "Brieuc Kaisin",
+        "kaisin.brieuc@gmail.com",
+        url("https://github.com/brkaisin")
+      )
+    ),
+    crossScalaVersions := Seq("2.13.12"), // todo: Scala 3
+    scalaVersion := crossScalaVersions.value.head
+  )
+)
+
 val circeVersion = "0.14.3"
 val circeDep     = "io.circe" %% (_: String) % circeVersion
 def circeDeps =
@@ -27,11 +48,6 @@ def circeDeps =
 
 val scalaReflectDep = "org.scala-lang" % "scala-reflect" % "2.13.12" % Provided
 
-val magnoliaDeps = Seq(
-  "com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.6",
-  scalaReflectDep
-)
-
 val testDeps = Seq(
   "org.scalacheck" %% "scalacheck" % "1.17.0",
   "org.scalameta" %% "munit" % "0.7.29"
@@ -40,7 +56,7 @@ val testDeps = Seq(
 lazy val core = project
   .in(file("core"))
   .settings(
-    libraryDependencies ++= magnoliaDeps ++ testDeps
+    libraryDependencies ++= List(scalaReflectDep) ++ testDeps
   )
 
 lazy val circe = project

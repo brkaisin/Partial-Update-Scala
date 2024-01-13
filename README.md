@@ -1,14 +1,13 @@
 # Partial update in Scala
 
+**todo: adapt this README since Magnolia has been replaced by custom macros**
+
 This repository is a tiny library for representing, deriving and performing partial updates of case classes in Scala,
 as well as serializing and deserializing these operations.
 
-The library has almost zero dependencies, except [Magnolia](https://github.com/softwaremill/magnolia) for type class
-derivation, which could be later replaced by custom meta-programming
-or [built-in derivation](https://docs.scala-lang.org/scala3/reference/contextual/derivation.html) (Scala 3 only). The
-library also uses [Circe](https://circe.github.io/circe/) for serialization and deserialization, but this lies in a
-separate module so that the
-user can choose its own serialization library.
+The core of the library has zero dependencies. The library only uses [Circe](https://circe.github.io/circe/) for
+serialization and deserialization, but this lies in a separate module so that the user can choose its own serialization
+library.
 
 ## Motivation
 
@@ -375,7 +374,7 @@ compute the diff between two lists**
   classes they represent (fields names, types, ...). Note that this would be solved with automatic code generation.
   [Shapeless](https://github.com/milessabin/shapeless) would be a good candidate for this, but it would also increase
   the compilation time, which is not desirable.
-- [ ] [Potentially] Remove Magnolia and replace it with custom meta-programming or Scala 3 built-in type class
+- [x] [Potentially] Remove Magnolia and replace it with custom meta-programming or Scala 3 built-in type class
   derivation.
 - [x] Add a "module" for serialization and deserialization, allowing the user to choose its own serialization library.
 - [x] Add the possibility to derive the partial update that happened between two instances of a case class. Now, this
