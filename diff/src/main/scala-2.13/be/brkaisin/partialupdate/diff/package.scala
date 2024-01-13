@@ -12,5 +12,4 @@ package object diff {
       partialDiffComputor: PartialDiffComputor[T, PartialType]
   ): PartialType =
     partialDiffComputor.computePartialDiff(currentValue, newValue)
-
 }

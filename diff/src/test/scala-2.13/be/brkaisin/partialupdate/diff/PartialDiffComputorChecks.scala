@@ -2,7 +2,6 @@ package be.brkaisin.partialupdate.diff
 
 import be.brkaisin.partialupdate.Generators._
 import be.brkaisin.partialupdate.core.Partial
-//import be.brkaisin.partialupdate.diff.Implicits._
 import be.brkaisin.partialupdate.diff.PartialDiffComputors._
 import be.brkaisin.partialupdate.models._
 import be.brkaisin.partialupdate.util.Identifiable
