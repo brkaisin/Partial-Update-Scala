@@ -25,16 +25,12 @@ object PartialOptionalField {
   final case class Updated[T, PartialFieldType <: Partial[T]](value: PartialFieldType)
       extends PartialOptionalField[T, PartialFieldType] {
     @throws[IllegalArgumentException]("if the value is not set")
-    def applyPartialUpdate(currentValue: Option[T]): Option[T] = {
-      val updatedComplete = value.applyPartialUpdate {
-        currentValue match {
-          case Some(innerValue) => innerValue
-          case None =>
-            throw new IllegalArgumentException("Cannot update a value that is not set.")
-        }
+    def applyPartialUpdate(currentValue: Option[T]): Option[T] =
+      currentValue match {
+        case Some(innerValue) => Some(value.applyPartialUpdate(innerValue))
+        case None =>
+          throw new IllegalArgumentException("Cannot update a value that is not set.")
       }
-      Some(updatedComplete)
-    }
   }
 
   /* The value is deleted */
