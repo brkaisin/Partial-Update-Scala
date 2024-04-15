@@ -24,7 +24,7 @@ object PartialUpdatorMacro {
       case m: MethodSymbol if m.isCaseAccessor => m
     }.toList
 
-    // Construct the partialTpe type field by field by calling the right implicit partialDiffComputor for each field
+    // Construct the partialTpe type field by field by calling the applyPartialUpdate method on each field
     val fieldsDiffTrees: List[c.universe.Tree] = fields.zip(partialFields).map {
       case (field, partialField) =>
         val fieldName: c.universe.TermName        = field.name.toTermName
@@ -47,7 +47,7 @@ object PartialUpdatorMacro {
           partialFieldType.baseType(weakTypeOf[Partial[_]].typeSymbol).typeArgs.head
 
         // 2. Check that the field type in the partial is the same as the field type in the class
-        if (fieldType != partialFieldTypeT)
+        if (fieldType.typeSymbol != partialFieldTypeT.typeSymbol)
           c.abort(
             c.enclosingPosition,
             s"Field types don't match for field $fieldName: $fieldType != $partialFieldTypeT"
@@ -57,7 +57,7 @@ object PartialUpdatorMacro {
         q"$fieldName = $partialField.applyPartialUpdate(currentValue.$fieldName)"
     }
 
-    // Combine the individual field diffs into a PartialDiffComputor for the whole class
+    // Combine the individual field diffs into a PartialUpdator for the whole class
     c.Expr[PartialUpdator[T, PartialType]] {
       // SAM syntax
       q"(currentValue: $tpe, partial: $partialTpe) => new $tpe(..$fieldsDiffTrees)"
