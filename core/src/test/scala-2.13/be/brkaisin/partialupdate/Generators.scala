@@ -6,6 +6,7 @@ import be.brkaisin.partialupdate.util.Identifiable
 import org.scalacheck.{Arbitrary, Gen}
 
 import java.util.UUID
+import scala.reflect.ClassTag
 
 object Generators {
 
@@ -108,6 +109,22 @@ object Generators {
       Gen.const(PartialIdentifiableListField.Unchanged[Id, T, PartialFieldType]())
     )
 
+  def partialEnum2FieldGen[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
+    T1
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](
+      gen1NotUnchanged: Gen[T1], // must generate a value that is not Unchanged, since for update
+      genPartial1: Gen[PartialFieldType1],
+      gen2NotUnchanged: Gen[T2], // must generate a value that is not Unchanged, since for update
+      genPartial2: Gen[PartialFieldType2]
+  ): Gen[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] =
+    Gen.oneOf(
+      gen1NotUnchanged.map(PartialEnum2Field.Value1Set[T, T1, PartialFieldType1, T2, PartialFieldType2]),
+      gen2NotUnchanged.map(PartialEnum2Field.Value2Set[T, T1, PartialFieldType1, T2, PartialFieldType2]),
+      genPartial1.map(PartialEnum2Field.Value1Updated[T, T1, PartialFieldType1, T2, PartialFieldType2]),
+      genPartial2.map(PartialEnum2Field.Value2Updated[T, T1, PartialFieldType1, T2, PartialFieldType2]),
+      Gen.const(PartialEnum2Field.Unchanged[T, T1, PartialFieldType1, T2, PartialFieldType2]())
+    )
+
   lazy val fooGen: Gen[Foo] = for {
     string <- stringGen
     int    <- intGen
@@ -181,4 +198,27 @@ object Generators {
     ids  <- partialListFieldGen[UUID, PartialField[UUID]](uuidGen, notUnchangedPartialFieldGen(uuidGen))
     foos <- partialListFieldGen[Foo, PartialFoo](fooGen, partialFooGen)
   } yield PartialQux(ids, foos)
+
+  lazy val corgeGen: Gen[Corge] = for {
+    stringOrInt <- Gen.oneOf(
+      stringGen.map(Corge.StringOrInt.StringWrapper(_)),
+      intGen.map(Corge.StringOrInt.IntWrapper(_))
+    )
+  } yield Corge(stringOrInt)
+
+  lazy val partialCorgeGen: Gen[PartialCorge] = for {
+    stringOrInt <-
+      partialEnum2FieldGen[
+        Corge.StringOrInt,
+        Corge.StringOrInt.StringWrapper,
+        Corge.StringOrInt.StringWrapper.PartialStringWrapper,
+        Corge.StringOrInt.IntWrapper,
+        Corge.StringOrInt.IntWrapper.PartialIntWrapper
+      ](
+        stringGen.map(Corge.StringOrInt.StringWrapper(_)),
+        notUnchangedPartialFieldGen(stringGen).map(Corge.StringOrInt.StringWrapper.PartialStringWrapper),
+        intGen.map(Corge.StringOrInt.IntWrapper(_)),
+        notUnchangedPartialFieldGen(intGen).map(Corge.StringOrInt.IntWrapper.PartialIntWrapper)
+      )
+  } yield PartialCorge(stringOrInt)
 }
