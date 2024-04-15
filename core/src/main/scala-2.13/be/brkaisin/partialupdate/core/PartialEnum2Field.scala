@@ -11,18 +11,17 @@ import scala.reflect.ClassTag
   * @tparam PartialFieldType1 the type of the [[Partial]] that can be applied to T1
   * @tparam PartialFieldType2 the type of the [[Partial]] that can be applied to T2
   */
-sealed abstract class PartialEnum2Field[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+sealed abstract class PartialEnum2Field[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
   T1
-], PartialFieldType2 <: Partial[T2]]
+], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]]
     extends Partial[T]
 
 object PartialEnum2Field {
   /* The value is updated to T1 */
-  final case class Value1Set[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+  final case class Value1Set[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
     T1
-  ], PartialFieldType2 <: Partial[T2]](
-      value: T1
-  ) extends PartialEnum2Field[T, T1, T2, PartialFieldType1, PartialFieldType2] {
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](value: T1)
+      extends PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2] {
     def applyPartialUpdate(currentValue: T): T =
       currentValue match {
         case _: T1 =>
@@ -32,10 +31,10 @@ object PartialEnum2Field {
   }
 
   /* The value is updated to T2 */
-  final case class Value2Set[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+  final case class Value2Set[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
     T1
-  ], PartialFieldType2 <: Partial[T2]](value: T2)
-      extends PartialEnum2Field[T, T1, T2, PartialFieldType1, PartialFieldType2] {
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](value: T2)
+      extends PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2] {
     def applyPartialUpdate(currentValue: T): T =
       currentValue match {
         case _: T2 =>
@@ -45,10 +44,10 @@ object PartialEnum2Field {
   }
 
   /* The value is of type T1 and is updated */
-  final case class Value1Updated[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+  final case class Value1Updated[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
     T1
-  ], PartialFieldType2 <: Partial[T2]](value: PartialFieldType1)
-      extends PartialEnum2Field[T, T1, T2, PartialFieldType1, PartialFieldType2] {
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](value: PartialFieldType1)
+      extends PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2] {
     def applyPartialUpdate(currentValue: T): T =
       currentValue match {
         case value1: T1 => value.applyPartialUpdate(value1)
@@ -58,11 +57,10 @@ object PartialEnum2Field {
   }
 
   /* The value is of type T2 and is updated */
-  final case class Value2Updated[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+  final case class Value2Updated[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
     T1
-  ], PartialFieldType2 <: Partial[T2]](
-      value: PartialFieldType2
-  ) extends PartialEnum2Field[T, T1, T2, PartialFieldType1, PartialFieldType2] {
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](value: PartialFieldType2)
+      extends PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2] {
     def applyPartialUpdate(currentValue: T): T =
       currentValue match {
         case value2: T2 => value.applyPartialUpdate(value2)
@@ -72,10 +70,10 @@ object PartialEnum2Field {
   }
 
   /* The value is not updated */
-  final case class Unchanged[T, T1 <: T: ClassTag, T2 <: T: ClassTag, PartialFieldType1 <: Partial[
+  final case class Unchanged[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
     T1
-  ], PartialFieldType2 <: Partial[T2]]()
-      extends PartialEnum2Field[T, T1, T2, PartialFieldType1, PartialFieldType2] {
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]]()
+      extends PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2] {
     def applyPartialUpdate(currentValue: T): T = currentValue
   }
 }
