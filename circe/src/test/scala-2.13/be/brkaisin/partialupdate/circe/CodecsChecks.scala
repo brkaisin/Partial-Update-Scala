@@ -59,4 +59,8 @@ final class CodecsChecks extends Properties("Codecs Checks") {
   property("Codec[ImmutableFoo] works") = codecPropertyGen(immutableFooGen)
 
   property("Codec[PartialImmutableFoo] works") = codecPropertyGen(partialImmutableFooGen)
+
+  property("Codec[Corge] works") = codecPropertyGen(corgeGen)
+
+  property("Codec[PartialCorge] works") = codecPropertyGen(partialCorgeGen)
 }

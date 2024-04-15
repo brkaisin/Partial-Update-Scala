@@ -9,6 +9,8 @@ import io.circe._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax.EncoderOps
 
+import scala.reflect.ClassTag
+
 /**
   * This file contains somewhat opinionated circe codecs for the partial update library.
   * It is possible to use the library with other custom codecs, or with part of the codecs defined here
@@ -261,6 +263,53 @@ object CirceCodecs {
     case PartialIdentifiableListField.ElemsReordered(newOrder) => newOrder.asJson
     case PartialIdentifiableListField.Unchanged()              => Json.obj() // this value should be dropped by the outside encoder
   }
+
+  implicit def partialEnum2FieldEncoder[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
+    T1
+  ]: Encoder, T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]: Encoder](implicit
+      tEncoder: Encoder[T]
+  ): Encoder[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] = {
+    case PartialEnum2Field.Value1Set(value) =>
+      // the encoder we have is an encoder of T, but we want one of T1. And Encoder is invariant in T. Explaining the cast.
+      value.asJson(tEncoder.asInstanceOf[Encoder[T1]])
+    case PartialEnum2Field.Value2Set(value) =>
+      // the encoder we have is an encoder of T, but we want one of T2. And Encoder is invariant in T. Explaining the cast.
+      value.asJson(tEncoder.asInstanceOf[Encoder[T2]])
+    case PartialEnum2Field.Value1Updated(value) => value.asJson
+    case PartialEnum2Field.Value2Updated(value) => value.asJson
+    case PartialEnum2Field.Unchanged()          => Json.obj() // this value should be dropped by the outside encoder
+  }
+
+  implicit def partialEnum2FieldDecoder[T: Decoder, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
+    T1
+  ]: Decoder, T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]: Decoder]
+      : Decoder[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] =
+    new Decoder[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] {
+      def apply(c: HCursor): Result[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] = tryDecode(c)
+
+      final override def tryDecode(
+          c: ACursor
+      ): Decoder.Result[PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] =
+        c match {
+          case c: HCursor =>
+            if (c.value.isNull) Left(DecodingFailure(Reason.WrongTypeExpectation("non-null", c.value), c.history))
+            else
+              c.as[T]
+                .map {
+                  case t1: T1 => PartialEnum2Field.Value1Set[T, T1, PartialFieldType1, T2, PartialFieldType2](t1)
+                  case t2: T2 => PartialEnum2Field.Value2Set[T, T1, PartialFieldType1, T2, PartialFieldType2](t2)
+                }
+                .orElse {
+                  c.as[PartialFieldType1]
+                    .map(PartialEnum2Field.Value1Updated[T, T1, PartialFieldType1, T2, PartialFieldType2](_))
+                }
+                .orElse {
+                  c.as[PartialFieldType2]
+                    .map(PartialEnum2Field.Value2Updated[T, T1, PartialFieldType1, T2, PartialFieldType2](_))
+                }
+          case _: FailedCursor => Right(PartialEnum2Field.Unchanged())
+        }
+    }
 
   /* Any partial */
   def partialCodec[P <: Partial[_]](derivedCodec: Codec[P]): Codec[P] =
