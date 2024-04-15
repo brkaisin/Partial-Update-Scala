@@ -3,6 +3,8 @@ package be.brkaisin.partialupdate.diff
 import be.brkaisin.partialupdate.core._
 import be.brkaisin.partialupdate.util.Identifiable
 
+import scala.reflect.ClassTag
+
 object Implicits {
   implicit val dummy: DummyImplicit =
     DummyImplicit.dummyImplicit // to prevent IJ from removing the import of Implicits._
@@ -27,17 +29,15 @@ object Implicits {
 
   implicit def partialOptionalFieldDiffComputor[T, PartialFieldType <: Partial[T]](implicit
       partialDiffComputor: PartialDiffComputor[T, PartialFieldType]
-  ): PartialDiffComputor[Option[T], PartialOptionalField[T, PartialFieldType]] =
-    (currentValue: Option[T], newValue: Option[T]) =>
-      (currentValue, newValue) match {
-        case (Some(currentValue), Some(newValue)) if currentValue != newValue =>
-          PartialOptionalField.Updated(partialDiffComputor.computePartialDiff(currentValue, newValue))
-        case (Some(_), None) =>
-          PartialOptionalField.Deleted()
-        case (None, Some(newValue)) =>
-          PartialOptionalField.Set(newValue)
-        case _ => PartialOptionalField.Unchanged()
-      }
+  ): PartialDiffComputor[Option[T], PartialOptionalField[T, PartialFieldType]] = {
+    case (Some(currentValue), Some(newValue)) if currentValue != newValue =>
+      PartialOptionalField.Updated(partialDiffComputor.computePartialDiff(currentValue, newValue))
+    case (Some(_), None) =>
+      PartialOptionalField.Deleted()
+    case (None, Some(newValue)) =>
+      PartialOptionalField.Set(newValue)
+    case _ => PartialOptionalField.Unchanged()
+  }
 
   implicit def partialListFieldDiffComputor[T, PartialFieldType <: Partial[T]]
       : PartialDiffComputor[List[T], PartialListField[T, PartialFieldType]] =
@@ -92,5 +92,20 @@ object Implicits {
         }
         PartialIdentifiableListField.ElemsUpdated(operations)
       }
+
+  implicit def partialEnum2FieldDiffComputor[T, T1 <: T: ClassTag, PartialFieldType1 <: Partial[
+    T1
+  ], T2 <: T: ClassTag, PartialFieldType2 <: Partial[T2]](implicit
+      t1PartialDiffComputor: PartialDiffComputor[T1, PartialFieldType1],
+      t2PartialDiffComputor: PartialDiffComputor[T2, PartialFieldType2]
+  ): PartialDiffComputor[T, PartialEnum2Field[T, T1, PartialFieldType1, T2, PartialFieldType2]] = {
+    case (_: T2, t1: T1)                                      => PartialEnum2Field.Value1Set(t1)
+    case (_: T1, t2: T2)                                      => PartialEnum2Field.Value2Set(t2)
+    case (currentValue, newValue) if currentValue == newValue => PartialEnum2Field.Unchanged()
+    case (currentT1: T1, newT1: T1) =>
+      PartialEnum2Field.Value1Updated(t1PartialDiffComputor.computePartialDiff(currentT1, newT1))
+    case (currentT2: T2, newT2: T2) =>
+      PartialEnum2Field.Value2Updated(t2PartialDiffComputor.computePartialDiff(currentT2, newT2))
+  }
 
 }
