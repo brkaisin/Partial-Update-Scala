@@ -1,6 +1,9 @@
 package be.brkaisin.partialupdate.diff
 
 import be.brkaisin.partialupdate.diff.Implicits._
+import be.brkaisin.partialupdate.models.Corge.StringOrInt.IntWrapper.PartialIntWrapper
+import be.brkaisin.partialupdate.models.Corge.StringOrInt.{IntWrapper, StringWrapper}
+import be.brkaisin.partialupdate.models.Corge.StringOrInt.StringWrapper.PartialStringWrapper
 import be.brkaisin.partialupdate.models._
 
 object PartialDiffComputors {
@@ -25,5 +28,12 @@ object PartialDiffComputors {
     derivePartialDiffComputor
 
   implicit val quxPartialDiffComputor: PartialDiffComputor[Qux, PartialQux] =
+    derivePartialDiffComputor
+
+  implicit val stringWrapperPartialDiffComputor: PartialDiffComputor[StringWrapper, PartialStringWrapper] =
+    derivePartialDiffComputor
+  implicit val intWrapperPartialDiffComputor: PartialDiffComputor[IntWrapper, PartialIntWrapper] =
+    derivePartialDiffComputor
+  implicit val corgePartialDiffComputor: PartialDiffComputor[Corge, PartialCorge] =
     derivePartialDiffComputor
 }

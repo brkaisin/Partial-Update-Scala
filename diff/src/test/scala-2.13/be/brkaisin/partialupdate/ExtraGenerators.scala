@@ -1,6 +1,8 @@
 package be.brkaisin.partialupdate
 
 import be.brkaisin.partialupdate.Generators._
+import be.brkaisin.partialupdate.models.Corge.StringOrInt
+import be.brkaisin.partialupdate.models.Corge.StringOrInt.{IntWrapper, StringWrapper}
 import be.brkaisin.partialupdate.models._
 import be.brkaisin.partialupdate.util.Identifiable
 import org.scalacheck.Gen
@@ -224,4 +226,21 @@ object ExtraGenerators {
       BigBar(bigFooAndUpdate2._2)
     )
   } yield (bigBar1, bigBar2)
+
+  lazy val stringWrapperGen: Gen[StringWrapper] = stringGen.map(string => StringWrapper(value = string))
+  lazy val intWrapperGen: Gen[IntWrapper]       = intGen.map(int => IntWrapper(value = int))
+
+  lazy val stringOrIntAndUpdateGen: Gen[(StringOrInt, StringOrInt)] = for {
+    stringWrapper1 <- stringWrapperGen
+    stringWrapper2 <- stringWrapperGen
+    intWrapper1    <- intWrapperGen
+    intWrapper2    <- intWrapperGen
+    stringOrInt1   <- Gen.oneOf(stringWrapper1, intWrapper1)
+    stringOrInt2   <- Gen.oneOf(stringOrInt1 /* Unchanged */, stringWrapper2, intWrapper2)
+  } yield (stringOrInt1, stringOrInt2)
+
+  implicit lazy val corgeAndUpdateGen: Gen[(Corge, Corge)] =
+    stringOrIntAndUpdateGen.map {
+      case (left, right) => (Corge(left), Corge(right))
+    }
 }

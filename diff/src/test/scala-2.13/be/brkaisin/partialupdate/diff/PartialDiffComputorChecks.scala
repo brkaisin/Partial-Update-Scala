@@ -54,4 +54,6 @@ final class PartialDiffComputorChecks extends Properties("PartialDiffComputor Ch
   property("PartialDiffComputor[BigFoo, PartialBigFoo] works") = partialDiffComputorPropertyGen[BigFoo, PartialBigFoo]
 
   property("PartialDiffComputor[BigBar, PartialBigBar] works") = partialDiffComputorPropertyGen[BigBar, PartialBigBar]
+
+  property("PartialDiffComputor[Corge, PartialCorge] works") = partialDiffComputorPropertyGen[Corge, PartialCorge]
 }
