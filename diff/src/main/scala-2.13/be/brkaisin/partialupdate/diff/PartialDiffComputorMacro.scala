@@ -46,7 +46,7 @@ object PartialDiffComputorMacro {
           partialFieldType.baseType(weakTypeOf[Partial[_]].typeSymbol).typeArgs.head
 
         // 2. Check that the field type in the partial is the same as the field type in the class
-        if (fieldType != partialFieldTypeT)
+        if (fieldType.typeSymbol != partialFieldTypeT.typeSymbol)
           c.abort(
             c.enclosingPosition,
             s"Field types don't match for field $fieldName: $fieldType != $partialFieldTypeT"
